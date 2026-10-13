@@ -1,145 +1,145 @@
-# 栖页 Qiye
+# Qiye | 栖页
 
-面向学习任务启动困难的 AI 线上自习室。本项目是独立产品 MVP，结合任务规划与专注执行，减少开始学习前手动拆解、录入待办的准备成本。
+An AI-powered virtual study room for people who find it hard to get started. This independently developed MVP connects task planning with focused execution, reducing the effort of manually breaking down goals and creating to-do lists before studying.
 
-> 当前公开版本为源码展示版，不是已部署的在线产品。以下截图展示开发者本地版本；音频和运行所需的原始图片素材未包含，克隆后书房背景、头像与宠物图像不会完整显示。
+> This repository is a source-code showcase, not a hosted application. Screenshots show the developer's local version. Audio files and original visual assets are not included, so room backgrounds, avatars, and pet images will not render fully from a fresh clone.
 
-![栖页首页：雪山书房与专注入口](docs/screenshots/home.png)
+![Qiye home screen with a snowy mountain study room](docs/screenshots/home.png)
 
-## 产品思路
+## Product Approach
 
-面向备考、作业、论文与个人学习等场景，将模糊的学习目标转化为可执行的小步骤。AI 提供建议，由用户决定是否采纳，不在生成后自动开始执行。
+Designed for exam preparation, assignments, academic writing, and independent learning, Qiye turns broad goals into actionable steps. AI proposes a plan; users decide whether to adopt it. Generating a plan does not automatically start execution.
 
-核心流程：**目标输入 → AI 拆解 → 计划确认与调整 → 待办执行与计时**。
+Core flow: **Describe a goal → Generate an AI plan → Review and adjust → Work through tasks with timers**.
 
-- **AI 任务规划**：将自然语言目标拆解为步骤，生成带预计时长的待办；支持调整内容、时长和顺序。
-- **专注环境**：提供多种书房场景、环境声、番茄钟与学习记录。
-- **多人在线自习**：通过邀请加入房间，选择跟随房主目标或使用个人目标；同步共享目标、清单及目标倒计时。
-- **学习陪伴**：宠物陪伴天数、喂养与成长反馈。
+- **AI task planning**: Break down natural-language goals into a to-do list with estimated durations. Edit task content, timing, and order.
+- **Focus environment**: Choose study scenes, mix ambient sounds, use a Pomodoro timer, and track study sessions.
+- **Shared study rooms**: Invite friends, follow the host's goal or keep a personal goal, and synchronize shared goals, task lists, and goal countdowns.
+- **Study companion**: Track days together and feed a virtual pet to support its growth.
 
-## 产品截图
+## Product Walkthrough
 
-### 设置学习环境与本轮目标
+### Set Up Your Environment and Goal
 
-选择书房场景，自定义背景音乐与环境声组合，再设置专注时长和本轮目标。
+Choose a study scene, customize background music and ambient sounds, and set a session duration and goal. Start directly or ask AI to plan the session first.
 
-![选择学习场景：六种书房氛围](docs/screenshots/scene-selection.png)
+![Choose from six study environments](docs/screenshots/scene-selection.png)
 
 <details>
-<summary>查看声音配置、专注时长与目标设置</summary>
+<summary>View sound settings, session duration, and the AI planning entry point</summary>
 
-**配置声音氛围**：分别调整音乐与环境总音量，自定义环境声组合及各声道音量。
+**Sound settings**: Adjust music and ambient volume separately, combine environmental sounds, and control individual sound levels.
 
-![声音氛围与环境声混音设置](docs/screenshots/sound-settings.png)
+![Background music and ambient sound mixer](docs/screenshots/sound-settings.png)
 
-**设置本轮学习**：选择专注时长，填写可选目标，然后开始学习。
+**Session setup and AI planning**: Select a duration and optionally enter a goal. Users can start studying directly or select "Plan these 50 minutes" to turn the goal into an AI-generated plan. The planning entry point reflects the selected session duration. Review and adjust the plan before starting.
 
-![专注时长与本轮目标设置](docs/screenshots/session-setup.png)
+![Session duration, goal input, and the option to plan the session with AI](docs/screenshots/session-setup.png)
 
 </details>
 
-### 从模糊目标到可执行计划
+### Turn a Broad Goal into an Actionable Plan
 
-用户用自然语言描述本轮任务，AI 给出步骤建议；用户可以调整内容和预计时长，再选择“按计划开始”。
+Describe a task in natural language and receive suggested steps. Edit the content and estimated durations, then choose "Start with this plan."
 
-<img src="docs/screenshots/ai-input.png" alt="自然语言输入学习目标" width="640">
+<img src="docs/screenshots/ai-input.png" alt="Describe a learning goal in natural language" width="640">
 
 <table>
-  <tr><th>拆解任务与确认计划</th><th>计划后续步骤</th></tr>
+  <tr><th>Task breakdown and plan review</th><th>Additional steps and adjustments</th></tr>
   <tr>
-    <td width="50%"><img src="docs/screenshots/ai-plan.png" alt="AI 任务拆解与用户确认"></td>
-    <td width="50%"><img src="docs/screenshots/ai-plan-more.png" alt="AI 计划后续步骤与调整入口"></td>
+    <td width="50%"><img src="docs/screenshots/ai-plan.png" alt="AI-generated tasks for user review"></td>
+    <td width="50%"><img src="docs/screenshots/ai-plan-more.png" alt="Additional plan steps and the adjustment input"></td>
   </tr>
 </table>
 
-### 将计划衔接到专注执行
+### Move from Planning to Focused Work
 
-计划进入待办清单，可调整顺序、选择当前任务，并查看目标倒计时与番茄钟。
+The confirmed plan becomes a to-do list. Reorder tasks, select the current task, and track both the goal countdown and the Pomodoro timer.
 
-![待办清单、当前目标与倒计时](docs/screenshots/task-execution.png)
+![To-do list, current goal, and countdown timers](docs/screenshots/task-execution.png)
 
 <details>
-<summary>查看雨夜书房的专注界面</summary>
+<summary>View the rainy library focus screen</summary>
 
-![雨夜书房与番茄钟](docs/screenshots/focus.png)
+![Rainy library study scene with a Pomodoro timer](docs/screenshots/focus.png)
 
 </details>
 
-### 多人在线自习
+### Study Together
 
-创建邀请房间，与朋友一起学习；成员可跟随房主目标，也可保留个人目标。
+Create a room and invite friends. Members can follow the host's goal or keep their own goals.
 
-![多人自习成员与目标模式](docs/screenshots/room-members.png)
+![Shared study room members and goal modes](docs/screenshots/room-members.png)
 
 <details>
-<summary>查看邀请与房间设置</summary>
+<summary>View invitations and room settings</summary>
 
-![邀请朋友进入同一间书房](docs/screenshots/room-invite.png)
+![Invite friends into the same study room](docs/screenshots/room-invite.png)
 
-截图中的 127.0.0.1 是本机演示地址，不是可供访客使用的在线邀请。
+The `127.0.0.1` address in this screenshot is a local demo address, not a public invitation link.
 
 </details>
 
-### 学习陪伴
+### A Study Companion
 
-记录陪伴天数，通过专注获得食物；喂养增加成长值，为学习提供轻量反馈。
+Track days spent together and earn food through focused study. Feeding increases the pet's growth value, providing lightweight feedback on study activity.
 
-<img src="docs/screenshots/companion.png" alt="学习伙伴的陪伴天数、喂养与成长值" width="420">
+<img src="docs/screenshots/companion.png" alt="Study companion: days together, feeding, and growth" width="420">
 
-## AI 工作流
+## AI Workflow
 
-当前使用 Ollama 本地模型。模型生成结构化规划，程序校验字段和步骤，并通过确定性时间分配工具约束总时长。背景不足时支持澄清；结果需用户确认后进入执行。
+The current implementation uses a local model through Ollama. The model generates a structured plan; the application validates fields and steps and uses a deterministic time-allocation tool to constrain the total duration. It supports clarification when context is insufficient. User confirmation is required before execution.
 
-这是受控规划工作流，不是能任意执行操作的通用自主 Agent。当前没有知识库检索或联网搜索能力，也不宣称已经验证学习效率提升。
+This is a controlled planning workflow, not a general-purpose autonomous agent with unrestricted actions. It currently has no knowledge-base retrieval or web search capabilities, and improved learning efficiency has not been validated.
 
-详细设计见 [Agent 设计](AGENT-DESIGN.md)，核心实现位于 `focus-agent.mjs`。
+See [Agent Design](AGENT-DESIGN.md) for the detailed design. The core implementation is in `focus-agent.mjs`.
 
-## 本地运行
+## Run Locally
 
-需要 Node.js 24，以及已运行并安装模型的 Ollama。
+Requirements: Node.js 24 and a running Ollama instance with a model installed.
 
-1. 将 `.env.example` 复制为 `.env`，设置 `LOCAL_MODEL` 为本机已安装的模型名称。
-2. 在项目根目录执行：
+1. Copy `.env.example` to `.env` and set `LOCAL_MODEL` to the name of an installed model.
+2. Run this command from the project root:
 
 ```sh
 node --env-file=.env server.mjs
 ```
 
-3. 打开终端显示的地址，默认是 `http://127.0.0.1:8766/`。
+3. Open the address printed in the terminal. The default is `http://127.0.0.1:8766/`.
 
-macOS 也可运行 `zsh start-local.command`，该脚本默认使用 8769 端口。未配置模型时，普通页面可运行，但 AI 规划不可用。当前服务器只接受本机访问，GitHub 仓库不是在线体验地址，GitHub Pages 也不能运行此后端。
+On macOS, you can also run `zsh start-local.command`, which defaults to port 8769. The regular interface can run without a configured model, but AI planning will be unavailable. The server currently accepts local connections only. This GitHub repository is not a live demo, and GitHub Pages cannot run its backend.
 
-## 技术结构
+## Architecture
 
-| 路径 | 职责 |
+| Path | Responsibility |
 | --- | --- |
-| `outputs/study-room-mvp/` | HTML、CSS、JavaScript 前端 |
-| `server.mjs` | 静态资源及同源 API 服务 |
-| `focus-agent.mjs` | 提示词、结构化输出校验、时间分配 |
-| `auth.mjs` | 本地 SQLite 账号与会话 |
-| `rooms.mjs` | 多人房间及状态同步 |
+| `outputs/study-room-mvp/` | HTML, CSS, and JavaScript frontend |
+| `server.mjs` | Static files and same-origin APIs |
+| `focus-agent.mjs` | Prompts, structured output validation, and time allocation |
+| `auth.mjs` | Local SQLite accounts and sessions |
+| `rooms.mjs` | Shared study rooms and state synchronization |
 
-开发中主要使用 Codex 辅助实现，Ollama 提供本地模型推理。
+Development was primarily assisted by Codex. Ollama provides local model inference.
 
-## 测试
+## Tests
 
-无需连接真实模型的核心测试：
+Core tests that do not require a live model:
 
 ```sh
 node --test server.test.mjs auth.test.mjs rooms.test.mjs ai-errors.test.mjs focus-agent.test.mjs companion-store.test.cjs companion-ui.test.mjs goal-clock.test.cjs calendar-store.test.cjs together.test.mjs task-order.test.mjs
 ```
 
-`scene-effects.test.mjs` 仍引用开发机器上的图像测试依赖路径，不包含在以上可移植命令中。真实模型评估另行运行 `node --env-file=.env agent-eval.mjs`；自动测试通过不代表模型质量或公网安全已经验证。
+`scene-effects.test.mjs` still references image-testing dependencies on the development machine and is excluded from the portable command above. Run live model evaluations separately with `node --env-file=.env agent-eval.mjs`. Passing automated tests does not establish model quality or readiness for secure public deployment.
 
-## 当前边界
+## Current Limitations
 
-- 账号支持本地注册与登录，但没有邮箱或手机验证、密码找回；请使用测试身份，不收集真实用户敏感信息。
-- 学习记录保存在浏览器本地，不随账号同步，也不按账号隔离。
-- 多人房间保存在服务内存，重启会丢失，不支持多实例共享。
-- 公网发布前还需要部署、安全和模型服务适配。
+- Local registration and sign-in are supported, but email or phone verification and password recovery are not. Use test identities; do not collect sensitive real-user information.
+- Study records are stored in the browser. They do not sync with accounts and are not isolated by account.
+- Shared rooms are stored in server memory, are lost on restart, and are not shared across server instances.
+- Public deployment still requires deployment, security, and model-service adaptations.
 
-## 素材与隐私
+## Assets and Privacy
 
-音频文件、私人运行数据及密钥不随代码上传。`docs/screenshots/` 仅包含项目作者选定用于产品展示的截图，不包含可复用的场景原图。本地选曲需要用户自行提供有权使用的文件；YouTube BGM 依赖第三方网络服务，不代表获得音乐再分发授权。环境声包含浏览器合成实现。
+Audio files, private runtime data, and secrets are excluded from this repository. `docs/screenshots/` contains only screenshots selected by the project author for the product showcase, not reusable original scene assets. Users must supply local audio files they have the right to use. YouTube background music relies on a third-party service and does not imply permission to redistribute that music. Ambient sounds include browser-synthesized audio.
 
-场景、头像等视觉素材的授权范围需要独立核对，仓库不对第三方素材授予再使用或再分发权。保留现有第三方许可文件；没有为整个项目附加开源许可证。
+Rights to scene images, avatars, and other visual assets must be checked separately. This repository does not grant reuse or redistribution rights to third-party assets. Existing third-party license files are retained; no project-wide open-source license has been added.
