@@ -1,0 +1,120 @@
+:root { --ink: #f3f6f3; --muted: #e5ece4c9; --line: #eef7f233; --panel: #18252370; }
+body { -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+button, input, textarea, select { -webkit-tap-highlight-color: transparent; }
+button { transition: background-color 180ms ease, border-color 180ms ease, box-shadow 180ms ease, opacity 180ms ease; }
+button:focus-visible, summary:focus-visible { outline: 2px solid #b5dbcc; outline-offset: 4px; }
+.app .scene-backdrop { position: fixed; inset: -1%; transform: none; transition: filter 450ms ease; }
+.app[data-view="setup"] .scene-backdrop { filter: brightness(.8); transform: none; }
+.app[data-view="focus"] .scene-backdrop { filter: none; }
+.app .scene-backdrop::after { content: ''; position: absolute; inset: 0; background: var(--previous-scene) center / cover; opacity: 0; pointer-events: none; }
+.app .scene-backdrop.scene-changing::after { animation: scene-dissolve 900ms ease both; }
+.app[data-motion="on"] .scene-backdrop { animation: none; }
+.app[data-motion="on"][data-view="focus"] .scene-backdrop { animation-duration: 60s; }
+.app[data-motion="paused"] .scene-backdrop { animation-play-state: paused; }
+.scene-vignette { pointer-events: none; }
+.kicker, .step-label { letter-spacing: 0; }
+.hero-copy h1 { text-shadow: 0 3px 24px #0005; }
+.hero-subtitle { font-weight: 500; }
+.hero-actions .glass-cta { background: #e5f0ec24; border-color: #edf7f466; box-shadow: inset 0 1px 0 #fff2, 0 8px 30px #0002; }
+.hero-actions .glass-cta:hover { background: #d9eee842; border-color: #edf7f4aa; }
+.hero-actions .arrow-right { transition: translate 200ms ease; }
+.hero-actions button:hover .arrow-right { translate: 3px 0; }
+.scene-card { border-radius: 8px; overflow: hidden; box-shadow: 0 8px 24px #0002; }
+.scene-card:hover { transform: translateY(-3px); }
+.scene-card.active { border-color: #c1e4d7; box-shadow: 0 0 0 1px #c1e4d755, 0 12px 30px #0003; }
+.app .focus-card, .app .goal-bar { background: #18252385; border-color: #e0ece238; box-shadow: inset 0 1px 0 #ffffff0d, 0 12px 40px #0002; backdrop-filter: blur(16px); }
+.app .goal-bar { opacity: 1; }
+.agent-panel, #sessionTodoList, #goalTimeSettings > div { background: #1d2927f5; border-color: #d7ebe02b; box-shadow: 0 12px 42px #0004; }
+dialog { box-shadow: 0 24px 80px #0005; }
+.app[data-motion="on"] .view.is-entering { animation: view-enter 360ms ease both; }
+html[data-motion="on"] dialog[open] { animation: panel-enter 220ms ease both; }
+html[data-motion="on"] details[open] > div { animation: panel-enter 180ms ease both; }
+html[data-motion="on"] button:active:not(:disabled) { translate: 0 1px; }
+.motion-preference { position: fixed; bottom: 20px; right: 22px; z-index: 19; display: flex; align-items: center; gap: 7px; padding: 8px 10px; border-radius: 6px; background: #17211e70; color: #edf4ee; font-size: 12px; backdrop-filter: blur(8px); }
+.motion-preference input { accent-color: #b5dbcc; width: 14px; height: 14px; margin: 0; }
+.app:not([data-view="home"]) .motion-preference { display: none; }
+@keyframes room-drift { from { transform: scale(1.01) translateX(-.15%); } to { transform: scale(1.035) translateX(.15%); } }
+@keyframes scene-dissolve { from { opacity: 1; } to { opacity: 0; } }
+@keyframes view-enter { from { opacity: 0; } to { opacity: 1; } }
+@keyframes panel-enter { from { opacity: 0; translate: 0 6px; } to { opacity: 1; translate: 0 0; } }
+@media (min-width: 2200px) {
+  .hero-copy { width: min(1500px, 80vw); }
+  .hero-copy h1 { font-size: 112px; }
+  .hero-subtitle { font-size: 26px; }
+  .hero-actions > button { width: 280px; height: 68px; font-size: 20px; }
+  .setup-view { max-width: 1920px; margin-inline: auto; }
+}
+@media (max-width: 600px) {
+  .motion-preference { bottom: 10px; right: 12px; }
+  .app .scene-backdrop { animation-duration: 48s; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}
+html[data-motion="off"] *, html[data-motion="off"] *::before, html[data-motion="off"] *::after { animation: none !important; transition: none !important; }
+.app .scene-backdrop { inset: 0; background-position: center; transform: none !important; }
+.scene-atmosphere { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.app[data-scene] .scene-backdrop { filter: none; }
+.app.is-focus-minimal .top-nav,
+.app.is-focus-minimal .control-dock { visibility: hidden; }
+.app #leaveFocusMode { top: auto; right: auto; bottom: max(24px, env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); min-height: 44px; padding: 12px 22px; border-radius: 8px; background: #1d2927ed; backdrop-filter: blur(16px); box-shadow: 0 4px 20px #0003; font-size: 14px; white-space: nowrap; }
+.app #leaveFocusMode:hover { background: #34453feb; }
+#togetherBadge { top: 170px; left: 24px; padding: 0; background: #202a27ed; border-radius: 8px; font-size: 13px; max-width: calc(100vw - 32px); }
+#togetherBadge summary { display: flex; align-items: center; gap: 8px; padding: 10px 14px; cursor: pointer; list-style: none; }
+#togetherBadge summary::-webkit-details-marker { display: none; }
+.room-presence-dot { width: 6px; height: 6px; border-radius: 50%; background: #b5dbcc; }
+.room-mini { width: 260px; max-width: calc(100vw - 34px); padding: 14px; box-sizing: border-box; border-top: 1px solid #ffffff20; }
+.room-mini header { display: flex; align-items: center; justify-content: space-between; color: #f2f5f3; }
+.room-mini header span { color: #a9c5b8; font-size: 11px; }
+#roomMiniMembers { padding: 0; list-style: none; max-height: 180px; overflow-y: auto; margin: 12px 0; }
+#roomMiniMembers li { display: grid; grid-template-columns: 30px minmax(0,1fr) auto; gap: 8px; align-items: center; padding: 8px 0; }
+#roomMiniMembers strong { overflow-wrap: anywhere; color: #eef4f0; font-size: 13px; font-weight: 500; }
+#roomMiniMembers small { color: #adbbb4; font-size: 11px; }
+.room-member-avatar { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: #b5dbcc; color: #243d32; }
+.room-member-avatar { overflow: hidden; font-size: 20px; line-height: 1; }
+.room-member-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.shared-goal-field { min-width: 0; display: flex; flex-direction: column; align-items: stretch; gap: 3px; }
+.shared-goal-field input { width: 100%; }
+@media (max-width: 700px) { .app .goal-bar .shared-goal-field { grid-column: 2; grid-row: 2; } }
+#sharedGoalMode { padding: 0; border: 0; background: transparent; color: #b5dbcc; text-align: left; font-size: 11px; cursor: pointer; line-height: 1.5; }
+#sharedGoalMode[hidden] { display: none; }
+#startAgentPlan { position: sticky; bottom: 0; flex-shrink: 0; width: 100%; padding: 12px 18px; margin-top: 16px; border: 1px solid #beded2; border-radius: 6px; color: #203b32; background: #b5dbcc; font: inherit; cursor: pointer; }
+#startAgentPlan[hidden] { display: none; }
+.agent-panel.has-plan { overflow: hidden; }
+.app .agent-panel.open { opacity: 1; background: #202a27; }
+.agent-panel.has-plan .agent-head { flex-shrink: 0; }
+.agent-panel.has-plan .agent-todos { min-height: 80px; overflow-y: auto; flex: 1 1 auto; }
+.agent-panel.has-plan .agent-answer { max-height: 80px; overflow-y: auto; flex-shrink: 0; }
+.agent-panel.has-plan #startAgentPlan { order: 5; position: static; margin-top: 10px; }
+.agent-panel.has-plan .agent-input { display: grid; grid-template-columns: minmax(0, 1fr) 34px; gap: 6px 8px; margin-top: 10px; padding: 8px 0; align-items: end; }
+.agent-panel.has-plan .agent-input > label { grid-column: 1 / -1; }
+.agent-panel.has-plan .agent-input textarea { min-height: 42px; height: 42px; max-height: 84px; overflow-y: auto; padding: 0; font-size: 13px; }
+.agent-panel.has-plan .agent-send { grid-column: 2; grid-row: 2; }
+.todo-add { padding-bottom: 10px; border-bottom: 1px solid #ffffff20; }
+.todo-add > summary { color: #b5dbcc; cursor: pointer; list-style: none; font-size: 13px; padding: 6px 0; }
+.todo-add > summary::-webkit-details-marker { display: none; }
+.todo-add .todo-composer { padding-top: 8px; padding-bottom: 0; border: 0; }
+.session-task-row.sortable-task { grid-template-columns: 22px 16px minmax(0, 1fr); }
+.sortable-task .session-task-options { grid-column: 3; }
+.session-task-row .task-drag-handle { width: 22px; height: 32px; padding: 0; color: #a6bbb1; background: transparent; cursor: grab; touch-action: none; font-size: 22px; line-height: 1; }
+.session-task-row.is-dragging { background: #b5dbcc18; outline: 1px solid #b5dbcc; border-radius: 4px; }
+.session-task-row.is-dragging .task-drag-handle { cursor: grabbing; }
+.session-task-row.task-drop-before { box-shadow: inset 0 2px #b5dbcc; }
+.session-task-row.task-drop-after { box-shadow: inset 0 -2px #b5dbcc; }
+#sharedGoalDialog { width: min(400px, calc(100vw - 32px)); box-sizing: border-box; padding: 24px; border: 1px solid #718079; border-radius: 8px; background: #202a27; color: #eef4f0; }
+#sharedGoalDialog::backdrop { background: #0006; backdrop-filter: blur(6px); }
+#sharedGoalDialog h2 { font-size: 20px; margin: 0 0 16px; }
+#sharedGoalDialog p { font-size: 14px; line-height: 1.6; overflow-wrap: anywhere; }
+#sharedGoalDialog textarea { box-sizing: border-box; width: 100%; min-height: 90px; background: #ffffff08; color: inherit; border: 1px solid #ffffff40; padding: 10px; border-radius: 4px; font: inherit; }
+#sharedGoalDialog footer { display: flex; justify-content: end; gap: 12px; }
+#sharedGoalDialog button { padding: 8px 16px; border-radius: 4px; border: 1px solid #ffffff30; color: inherit; background: transparent; }
+#sharedGoalDialog #saveSharedMode { background: #b5dbcc; color: #203b32; }
+.room-member-avatar .avatar-silhouette { transform: scale(.7); }
+#roomMiniMembers li:nth-child(even) .room-member-avatar { background: #e1ccd5; }
+#roomManage { width: 100%; padding: 8px; border: 1px solid #ffffff30; border-radius: 5px; color: #d5e8df; background: transparent; }
+#togetherDialog { box-sizing: border-box; width: min(420px, calc(100vw - 32px)); padding: 22px; }
+#togetherDialog h2 { font-size: 20px; line-height: 1.4; }
+#togetherDialog #leaveRoom { border: 0; font-size: 12px; color: #afbeb6; }
+#togetherDialog #inviteSection label { margin-bottom: 8px; }
+#togetherDialog #copyInvite { width: 100%; }
+@media (max-width: 600px) { #togetherBadge { top: 210px; left: 16px; } }

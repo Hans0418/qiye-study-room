@@ -1,0 +1,313 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script>
+      // The local preview needs an HTTP origin for the YouTube player.
+      if (window.location.protocol === "file:") {
+        window.location.replace("http://127.0.0.1:8766/");
+      }
+    </script>
+    <title>栖页 Qiye · 专注与陪伴</title>
+    <link rel="stylesheet" href="./styles.css?v=20260930-ai-goals" />
+    <link rel="stylesheet" href="./visual.css" />
+    <link rel="stylesheet" href="./companion.css" />
+  </head>
+  <body>
+    <main class="app" data-view="home">
+      <div class="scene-backdrop" aria-hidden="true"></div>
+      <div class="scene-vignette" aria-hidden="true"></div>
+      <aside id="bgmWidget" class="bgm-widget" hidden aria-label="背景音乐">
+        <button id="bgmToggle" aria-expanded="false" aria-controls="setupBgm" aria-label="展开音乐播放器" title="展开音乐播放器"><img src="./assets/music.svg" width="18" height="18" alt="" /></button>
+        <button id="bgmPlayRetry" hidden>点击播放 BGM</button>
+        <span id="bgmPlaybackStatus" class="bgm-playback-status" role="status"></span>
+        <section id="setupBgm" class="bgm-player" hidden aria-label="YouTube 音乐播放器"></section>
+      </aside>
+      <button id="audioRetryButton" class="audio-retry" hidden aria-live="polite">声音已中断 · 点击恢复声音</button>
+
+      <header class="top-nav">
+        <button class="circle-button back-button" id="backButton" aria-label="返回首页" title="返回首页">
+          <span class="chevron-left"></span>
+        </button>
+        <a class="brand" href="#" id="brandHome" aria-label="栖页首页">
+          <span class="brand-mark">Q</span>
+          <span>
+            <strong>栖页</strong>
+            <small>Qiye</small>
+          </span>
+        </a>
+        <nav class="nav-links" aria-label="配置导航">
+          <button data-jump="scene">场景</button>
+          <button data-jump="sound">音乐</button>
+          <button data-jump="plan">目标</button>
+          <button id="openCalendar">日历</button>
+        </nav>
+        <div class="account-nav">
+        <button class="pill-button language-button" aria-label="语言">
+          <span>中文</span>
+          <span class="chevron-down"></span>
+        </button>
+        <button id="openAccount" class="account-entry" aria-label="登录或注册" title="登录或注册"><span class="avatar-silhouette"></span></button>
+        </div>
+      </header>
+
+      <section class="view home-view" id="homeView" aria-label="首页">
+        <div class="hero-copy">
+          <p class="kicker">FOCUS · LEARN · GROW</p>
+          <h1>开启你的专注时光</h1>
+          <p class="hero-subtitle">在栖页，安顿心绪，让想做的事慢慢发生。</p>
+          <div class="hero-actions">
+          <button class="glass-cta" id="startSetupButton">
+            <span>开始今日专注</span>
+            <span class="arrow-right"></span>
+          </button>
+          <button class="glass-cta friends-entry" id="startTogether"><span>和朋友一起自习</span><span class="arrow-right"></span></button>
+          </div>
+        </div>
+
+        <button class="side-arrow side-arrow-left" id="prevSceneHome" aria-label="上一个场景">
+          <span class="chevron-left"></span>
+        </button>
+        <button class="side-arrow side-arrow-right" id="nextSceneHome" aria-label="下一个场景">
+          <span class="chevron-right"></span>
+        </button>
+
+        <footer class="home-footer">
+          <div class="footer-brand">
+            <span class="brand-mark">Q</span>
+            <div>
+              <strong>栖页</strong>
+              <small>一个专注学习与成长的空间，让每一次学习都更有深度。</small>
+            </div>
+          </div>
+          <div class="footer-links">
+            <strong>产品</strong>
+            <button data-jump="scene">场景</button>
+            <button data-jump="sound">音乐</button>
+            <button data-jump="plan">目标</button>
+          </div>
+          <div class="footer-note">
+            <strong>资源</strong>
+            <span>学习方法与使用指南将在正式版开放。</span>
+          </div>
+          <div class="social-buttons" aria-label="社交入口">
+            <button aria-label="小红书">小</button>
+            <button aria-label="抖音">抖</button>
+            <button aria-label="微信">微</button>
+          </div>
+        </footer>
+      </section>
+
+      <section class="view setup-view" id="setupView" aria-label="学习配置">
+        <div class="setup-grid">
+          <section class="glass-panel scene-panel" id="sceneSection">
+            <p class="step-label">STEP 01</p>
+            <h2>选择你的学习场景</h2>
+            <div class="scene-card-grid" id="sceneCards"></div>
+          </section>
+
+          <section class="glass-panel setup-panel">
+            <div id="soundSection" class="setup-block">
+              <p class="step-label">STEP 02</p>
+              <h2>设置声音氛围</h2>
+              <div class="sound-heading"><span id="soundPresetLabel"></span><button id="previewSoundButton" aria-pressed="false">试听声音</button></div>
+              <div class="style-picker" id="soundStyles"></div>
+              <div id="localBgmField" class="local-bgm-field">
+                <label for="localBgmFile">雪山书房 BGM · 选择音频</label>
+                <input id="localBgmFile" type="file" accept="audio/*,.mp3,.m4a,.wav" />
+                <p id="localBgmStatus" role="status">未选择音频，学习时播放合成氛围音</p>
+                <button id="clearLocalBgm" type="button">移除音频</button>
+              </div>
+              <label class="bgm-choice" id="snowBgmChoice"><input id="snowBgmEnabled" type="checkbox" checked /><span id="sceneBgmLabel">播放雪山书房 BGM</span></label>
+              <label class="range-row">
+                <span>音乐</span>
+                <small id="musicLabel">Lo-fi、轻音乐、钢琴等专注音乐</small>
+                <input id="musicVolume" type="range" min="0" max="100" value="58" />
+              </label>
+              <label class="range-row">
+                <span>环境总音量</span>
+                <small id="ambientLabel">根据当前场景自动匹配环境声</small>
+                <input id="ambientVolume" type="range" min="0" max="100" value="44" />
+              </label>
+              <div class="ambient-toolbar">
+                <label for="ambientPreset">声音组合</label>
+                <select id="ambientPreset" aria-label="声音组合">
+                  <option value="scene">场景推荐</option><option value="gentle">安静专注</option><option value="rainy">雨中漫步</option><option value="coast">海岸微风</option><option value="custom" disabled>自定义</option>
+                </select>
+                <button id="ambientOff">全部关闭</button>
+              </div>
+              <div class="ambient-sounds" id="ambientSounds" aria-label="环境声音混音"></div>
+            </div>
+
+            <div id="timerSection" class="setup-block">
+              <p class="step-label">STEP 03</p>
+              <h2>这次，留多少时间？</h2>
+              <div class="duration-grid" id="durationButtons">
+                <button data-minutes="25">25 分钟</button>
+                <button data-minutes="45">45 分钟</button>
+                <button class="active" data-minutes="50">50 分钟</button>
+                <button data-minutes="90">90 分钟</button>
+              </div>
+            </div>
+            <div id="planSection" class="setup-block objective-block">
+              <p class="step-label">STEP 04</p>
+              <h2>这段时间，想推进什么？</h2>
+              <label class="objective-field">
+                <span>本轮目标 · 可选</span>
+                <textarea id="setupGoalInput" rows="2" maxlength="300" placeholder="例如：把论文引言写出第一版"></textarea>
+              </label>
+              <div class="goal-help-row">
+                <button id="resumeGoalButton" hidden></button>
+                <button id="quickStepButton" hidden>规划这 50 分钟</button>
+              </div>
+              <p id="quickStatus" role="status"></p>
+              <div id="quickSuggestion" hidden><p id="quickStepText"></p><ol id="quickPlanSteps"></ol><button id="useQuickStep">采用本轮计划</button><button id="dismissQuickStep">暂时不用</button></div>
+              <button class="enter-button" id="enterRoomButton">
+                <span>开始学习</span>
+                <span class="arrow-right"></span>
+              </button>
+            </div>
+          </section>
+        </div>
+      </section>
+
+      <section class="view focus-view" id="focusView" aria-label="学习中">
+        <button class="side-arrow side-arrow-left" id="prevSceneFocus" aria-label="上一个场景">
+          <span class="chevron-left"></span>
+        </button>
+        <button class="side-arrow side-arrow-right" id="nextSceneFocus" aria-label="下一个场景">
+          <span class="chevron-right"></span>
+        </button>
+
+        <section class="focus-card" aria-label="当前番茄钟">
+          <div class="focus-card-top">
+            <span>POMODORO #<span id="sessionNumber">1</span></span>
+            <span class="status-pill"><i></i><span id="statusText">学习中</span></span>
+          </div>
+          <div class="focus-time-row">
+            <div class="focus-time" id="focusTime">50:00</div>
+            <div class="session-time-adjust">
+              <label><input id="sessionAdjustment" type="number" min="1" max="180" step="1" value="1" required aria-label="每次调整分钟数" /><span>min</span></label>
+              <div class="session-time-arrows">
+                <button id="addSessionTime" aria-label="增加时间" title="增加所选分钟数">↑</button>
+                <button id="subtractSessionTime" aria-label="减少时间" title="减少所选分钟数">↓</button>
+              </div>
+            </div>
+          </div>
+          <div class="progress-track">
+            <span id="progressFill"></span>
+          </div>
+          <div class="progress-meta">
+            <span>本轮进度</span>
+            <span id="progressPercent">0%</span>
+          </div>
+        </section>
+
+        <section class="goal-bar" aria-label="今日目标">
+          <span class="target-dot"></span>
+          <strong>本轮目标</strong>
+          <input id="goalInput" placeholder="自由专注" maxlength="300" aria-label="本轮目标" />
+          <div class="manual-goal-time"><span id="goalEstimate"></span><details id="goalTimeSettings"><summary title="调整目标计时">用时</summary><div><label>从现在起 <input id="manualGoalMinutes" type="number" min="1" max="180" step="1" value="15" required aria-label="本轮目标预计分钟数" /> 分钟</label><button id="applyGoalMinutes">开始计时</button></div></details></div>
+          <details id="sessionTodos"><summary>待办 <span id="sessionTodoCount">0</span></summary><div id="sessionTodoList"></div></details>
+          <div id="goalTimePrompt" hidden>
+            <p role="status">预计时间到了，这项任务完成了吗？</p>
+            <button id="completeTimedGoal">已完成</button>
+            <label>再给自己 <input id="goalExtraMinutes" type="number" min="1" max="180" step="1" value="5" required aria-label="加时分钟数" /> 分钟</label>
+            <button id="extendTimedGoal">未完成，加时</button>
+          </div>
+        </section>
+
+        <aside class="agent-panel" id="agentPanel" aria-label="AI 任务助手" aria-hidden="true">
+          <div class="agent-head">
+            <div>
+              <span>专注助手</span>
+              <strong>帮我理一理</strong>
+            </div>
+            <button class="agent-close" id="agentCloseButton" aria-label="关闭 AI 助手">
+              <span class="close-icon"></span>
+            </button>
+          </div>
+          <div class="agent-input">
+            <label for="agentPromptInput" id="agentInputLabel">这段时间，你想推进什么？</label>
+            <textarea id="agentPromptInput" rows="3" maxlength="4000" placeholder="写下任务，或你卡住的问题"></textarea>
+            <button type="button" id="agentSendButton" class="agent-send" aria-label="发送" title="发送" disabled><span class="arrow-right" aria-hidden="true"></span></button>
+          </div>
+          <p id="agentStatus" role="status"></p>
+          <p id="agentAnswer" class="agent-answer"></p>
+          <div class="agent-todos" id="agentTodos" aria-live="polite"></div>
+          <button id="startAgentPlan" type="button" hidden>按计划开始</button>
+        </aside>
+
+        <button id="leaveFocusMode" type="button">退出专注模式</button>
+        <aside id="focusSoundPanel" hidden aria-label="音乐调节">
+          <div class="agent-head"><strong>声音氛围</strong><button id="closeFocusSound" class="agent-close" aria-label="关闭音乐调节"><span class="close-icon"></span></button></div>
+          <label class="dock-range">
+            <span>音乐</span>
+            <input id="dockMusicVolume" type="range" min="0" max="100" value="58" />
+          </label>
+          <button class="dock-icon" id="shuffleButton" aria-label="切换音乐" title="切换音乐">
+            <span class="shuffle-icon"></span>
+          </button>
+          <label class="dock-range">
+            <span>背景音</span>
+            <input id="dockAmbientVolume" type="range" min="0" max="100" value="44" />
+          </label>
+        </aside>
+        <section class="control-dock" aria-label="学习控制">
+          <button class="focus-mode-button prominent" id="pauseButton" aria-label="暂停学习" title="暂停学习">
+            <span class="pause-icon"></span>
+            <span>暂停学习</span>
+          </button>
+          <button class="focus-mode-button" id="focusModeButton">
+            <span class="expand-icon"></span>
+            <span>专注模式</span>
+          </button>
+          <button class="focus-mode-button" id="agentButton">
+            <span class="spark-icon"></span>
+            <span>帮我理一理</span>
+          </button>
+        </section>
+      </section>
+
+      <section class="review-modal" id="reviewModal" aria-label="本轮复盘" aria-hidden="true">
+        <div class="review-panel">
+          <p class="step-label">SESSION REVIEW</p>
+          <h2>这一轮推进了吗？</h2>
+          <p class="review-goal" id="reviewGoal">写完论文引言第二段</p>
+          <div class="review-actions" id="reviewActions">
+            <button data-result="completed">完成了</button>
+            <button data-result="partial">推进了一点</button>
+            <button data-result="blocked">卡住了</button>
+          </div>
+          <label class="objective-field">
+            <span>下一步</span>
+            <textarea id="nextStepInput" rows="3" maxlength="90">继续写下一段，先列 3 个要点。</textarea>
+          </label>
+          <div class="review-summary">
+            <span id="reviewMinutes">50 分钟</span>
+            <span id="reviewScene">雪山书房</span>
+            <span id="reviewResult">等待选择</span>
+          </div>
+          <button class="enter-button save-review-button" id="saveReviewButton">
+            <span>保存复盘</span>
+            <span class="arrow-right"></span>
+          </button>
+        </div>
+      </section>
+    </main>
+
+    <script src="./ambient.js?v=20260928-wild-r1"></script>
+    <script src="./bgm.js?v=20260928-night-bgm"></script>
+    <script src="./goal-clock.js"></script>
+    <script src="./app.js?v=20261003-goal-clock"></script>
+    <script src="./calendar-store.js"></script>
+    <script src="./calendar.js"></script>
+    <script src="./together.js"></script>
+    <script src="./account.js"></script>
+    <script src="./scene-effects.js"></script>
+    <script src="./visual.js"></script>
+    <script src="./companion-store.js"></script>
+    <script src="./companion.js"></script>
+  </body>
+</html>
