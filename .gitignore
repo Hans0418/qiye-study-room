@@ -1,0 +1,40 @@
+.env
+.env.*
+!.env.example
+*.log
+.DS_Store
+.data/
+
+# Private runtime data and credentials
+*.sqlite
+*.sqlite-*
+*.db
+*.db-*
+*.pem
+*.key
+node_modules/
+
+# Audio/video assets are not distributed with the source
+*.[mM][pP]3
+*.[wW][aA][vV]
+*.[mM]4[aA]
+*.[aA][aA][cC]
+*.[fF][lL][aA][cC]
+*.[oO][gG][gG]
+*.[oO][pP][uU][sS]
+*.[aA][iI][fF]*
+*.[mM][pP]4
+*.[wW][eE][bB][mM]
+*.[mM][oO][vV]
+
+# Local mirrors and QA screenshots are not release content
+/work/
+/outputs/*
+!/outputs/study-room-mvp/
+/motion-check.mjs
+
+# Visual media pending a separate provenance review
+/outputs/study-room-mvp/assets/*.[pP][nN][gG]
+/outputs/study-room-mvp/assets/*.[jJ][pP][gG]
+/outputs/study-room-mvp/assets/*.[jJ][pP][eE][gG]
+/outputs/study-room-mvp/assets/*.[wW][eE][bB][pP]

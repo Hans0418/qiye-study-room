@@ -1,0 +1,20 @@
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const createStore = require('./outputs/study-room-mvp/calendar-store.js');
+test('calendar retains legacy history, successive days, stale tabs and undo', () => {
+  const map = new Map();
+  const storage = { get length() { return map.size; }, key: i => [...map.keys()][i], getItem: key => map.get(key) ?? null, setItem: (key, value) => map.set(key, value) };
+  storage.setItem('inookCalendarV1', JSON.stringify({ '2026-10-05': { manual: true, sessions: [] } }));
+  const a = createStore(storage), b = createStore(storage);
+  a.update('2026-10-06', entry => ({ ...entry, manual: true }));
+  b.update('2026-10-07', entry => ({ ...entry, manual: true }));
+  assert.deepEqual(Object.keys(a.read()).sort(), ['2026-10-05', '2026-10-06', '2026-10-07']);
+  b.update('2026-10-07', entry => ({ ...entry, sessions: [{ minutes: 25 }] }));
+  a.update('2026-10-07', entry => ({ ...entry, sessions: [...entry.sessions, { minutes: 10 }] }));
+  assert.equal(createStore(storage).read()['2026-10-07'].sessions.length, 2);
+  a.update('2026-10-05', entry => ({ ...entry, manual: false }));
+  assert.equal(createStore(storage).read()['2026-10-05'].manual, false);
+  assert.equal(createStore(storage).read()['2026-10-06'].manual, true);
+  storage.setItem('inookCalendarV1', 'broken');
+  assert.equal(createStore(storage).read()['2026-10-06'].manual, true);
+});
