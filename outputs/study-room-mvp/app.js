@@ -215,7 +215,7 @@ function updateSound() {
   toggle.title = expanded ? "收起音乐播放器" : "展开音乐播放器";
   toggle.setAttribute("aria-label", toggle.title);
   toggle.setAttribute("aria-expanded", String(expanded));
-  musicLabel.textContent = !enabled ? "BGM 已关闭" : hasBgm ? `${selectedScene().name} BGM · YouTube` : state.soundStyle === "静音" ? "音乐已关闭" : `${state.soundStyle}氛围音 · 合成`;
+  musicLabel.textContent = !enabled ? "BGM 已关闭" : hasBgm ? `${selectedScene().name} BGM` : state.soundStyle === "静音" ? "音乐已关闭" : `${state.soundStyle}氛围音 · 合成`;
   window.snowBgm.sync(state.view, youtube, wantsAudio(), state.musicVolume, expanded, selectedScene().bgmVideoId);
   window.localBgm.sync(local && enabled, wantsAudio(), state.musicVolume);
   document.querySelector("#ambientLabel").textContent = window.ambientMixer.summary();
