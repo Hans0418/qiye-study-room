@@ -2,7 +2,7 @@
 
 An AI-powered virtual study room for people who find it hard to get started. This independently developed MVP connects task planning with focused execution, reducing the effort of manually breaking down goals and creating to-do lists before studying.
 
-> This repository is a source-code showcase, not a hosted application. Screenshots show the developer's local version. Audio files and original visual assets are not included, so room backgrounds, avatars, and pet images will not render fully from a fresh clone.
+> Portfolio MVP with local and cloud runtime modes. Screenshots show the developer's local version. Cloud deployment verification is in progress; this repository URL is not itself a live demo. Selected runtime images are included; audio recordings and secrets are not.
 
 ![Qiye home screen with a snowy mountain study room](docs/screenshots/home.png)
 
@@ -88,7 +88,7 @@ Track days spent together and earn food through focused study. Feeding increases
 
 ## AI Workflow
 
-The current implementation uses a local model through Ollama. The model generates a structured plan; the application validates fields and steps and uses a deterministic time-allocation tool to constrain the total duration. It supports clarification when context is insufficient. User confirmation is required before execution.
+Local mode uses Ollama; cloud mode uses a fixed Doubao model through a server-side API. The model generates a structured plan; the application validates fields and steps and uses a deterministic time-allocation tool to constrain the total duration. It supports clarification when context is insufficient. User confirmation is required before execution. Cloud AI requires sign-in and has shared daily request limits. Provider-side free-quota auto-pause must remain enabled; application request limits are not billing caps.
 
 This is a controlled planning workflow, not a general-purpose autonomous agent with unrestricted actions. It currently has no knowledge-base retrieval or web search capabilities, and improved learning efficiency has not been validated.
 
@@ -107,7 +107,11 @@ node --env-file=.env server.mjs
 
 3. Open the address printed in the terminal. The default is `http://127.0.0.1:8766/`.
 
-On macOS, you can also run `zsh start-local.command`, which defaults to port 8769. The regular interface can run without a configured model, but AI planning will be unavailable. The server currently accepts local connections only. This GitHub repository is not a live demo, and GitHub Pages cannot run its backend.
+On macOS, you can also run `zsh start-local.command`, which defaults to port 8769. The regular interface can run without a configured model, but AI planning will be unavailable. Local mode accepts local connections only. GitHub Pages cannot run this backend.
+
+## Cloud Deployment
+
+The cloud runtime targets Vercel with Supabase Postgres and Volcano Ark. Run `npm ci` and `npm run build`. Configure server-only environment variables using `.env.cloud.example`; never commit real values. Follow [Cloud Setup](docs/CLOUD-SETUP.md) for database migration, verified TLS, credentials, and deployment checks.
 
 ## Architecture
 
@@ -118,6 +122,8 @@ On macOS, you can also run `zsh start-local.command`, which defaults to port 876
 | `focus-agent.mjs` | Prompts, structured output validation, and time allocation |
 | `auth.mjs` | Local SQLite accounts and sessions |
 | `rooms.mjs` | Shared study rooms and state synchronization |
+| `cloud-auth.mjs`, `cloud-rooms.mjs`, `database.mjs` | Postgres-backed cloud accounts, sessions, rooms, and request limits |
+| `api/index.mjs`, `vercel.json`, `build.mjs` | Serverless API routing and allowlisted static build |
 
 Development was primarily assisted by Codex. Ollama provides local model inference.
 
@@ -135,8 +141,8 @@ node --test server.test.mjs auth.test.mjs rooms.test.mjs ai-errors.test.mjs focu
 
 - Local registration and sign-in are supported, but email or phone verification and password recovery are not. Use test identities; do not collect sensitive real-user information.
 - Study records are stored in the browser. They do not sync with accounts and are not isolated by account.
-- Shared rooms are stored in server memory, are lost on restart, and are not shared across server instances.
-- Public deployment still requires deployment, security, and model-service adaptations.
+- Local rooms are stored in server memory. Cloud rooms use Postgres with a 24-hour lifetime; mutations are serialized for this small demo, not optimized for high traffic.
+- Public deployment verification is still pending. This is a portfolio demo, not a production-ready service.
 
 ## Assets and Privacy
 
