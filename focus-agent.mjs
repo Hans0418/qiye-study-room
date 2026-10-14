@@ -20,12 +20,15 @@ export function allocateTime(weights, minutes) {
 }
 export function validatePlan(data, minutes) {
   const text = (s, max) => typeof s === 'string' && s.length <= max;
-  if (!data || !text(data.answer, 1000) || !data.answer.trim() || !text(data.question, 200) || !Array.isArray(data.assumptions) || data.assumptions.length > 3 || data.assumptions.some(s => !text(s, 200)) || !Array.isArray(data.steps)) throw new Error('INVALID_PLAN');
+  if (!data || !text(data.answer, 1000) || !data.answer.trim()) throw new Error('INVALID_PLAN', { cause: 'answer' });
+  if (!text(data.question, 200)) throw new Error('INVALID_PLAN', { cause: 'question' });
+  if (!Array.isArray(data.assumptions) || data.assumptions.length > 3 || data.assumptions.some(s => !text(s, 200))) throw new Error('INVALID_PLAN', { cause: 'assumptions' });
+  if (!Array.isArray(data.steps)) throw new Error('INVALID_PLAN', { cause: 'steps' });
   if (data.question.trim()) {
-    if (data.steps.length) throw new Error('INVALID_PLAN');
+    if (data.steps.length) throw new Error('INVALID_PLAN', { cause: 'question_with_steps' });
     return { ...data, steps: [], plan: [] };
   }
-  if (data.steps.some(s => !s || !text(s.action, 200) || !s.action.trim() || !text(s.deliverable, 200) || !s.deliverable.trim())) throw new Error('INVALID_PLAN');
+  if (data.steps.some(s => !s || !text(s.action, 200) || !s.action.trim() || !text(s.deliverable, 200) || !s.deliverable.trim())) throw new Error('INVALID_PLAN', { cause: 'step_content' });
   const times = allocateTime(data.steps.map(s => s.weight), minutes);
   const plan = data.steps.map((s, i) => ({ action: s.action, deliverable: s.deliverable, minutes: times[i] }));
   return { answer: data.answer, question: '', assumptions: data.assumptions, plan, steps: plan.map(s => `${s.minutes} 分钟 · ${s.action}；产物：${s.deliverable}`) };

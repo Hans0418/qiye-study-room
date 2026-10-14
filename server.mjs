@@ -136,6 +136,7 @@ export function createRequestHandler({ cloud = cloudConfig(), databaseFactory = 
         json(res, 200, { ...parsed, model: config[mode] });
       } catch (error) {
         const failure = describeAIError(error);
+        if (error.message === 'INVALID_PLAN' && ['answer', 'question', 'assumptions', 'steps', 'question_with_steps', 'step_content'].includes(error.cause)) failure.validation = error.cause;
         console.warn(`[Inook AI] ${failure.code}`);
         if (!res.destroyed) json(res, 502, { ...failure, error: cloud ? `AI 规划暂未完成，可以重试或手动开始。（${failure.code}）` : `${failure.error}（${failure.code}）` });
       }
