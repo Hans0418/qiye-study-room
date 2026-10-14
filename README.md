@@ -2,7 +2,9 @@
 
 An AI-powered virtual study room for people who find it hard to get started. This independently developed MVP connects task planning with focused execution, reducing the effort of manually breaking down goals and creating to-do lists before studying.
 
-> Portfolio MVP with local and cloud runtime modes. Screenshots show the developer's local version. Cloud deployment verification is in progress; this repository URL is not itself a live demo. Selected runtime images are included; audio recordings and secrets are not.
+**[Open the live demo](https://qiye-study-room.vercel.app)**
+
+> Portfolio MVP with local and cloud runtime modes. AI planning requires registration/sign-in and has daily demo limits (3 requests per account, 20 across the site). Screenshots below show the developer's local version. Selected runtime images are included; audio recordings and secrets are not.
 
 ![Qiye home screen with a snowy mountain study room](docs/screenshots/home.png)
 
@@ -142,7 +144,7 @@ node --test server.test.mjs auth.test.mjs rooms.test.mjs ai-errors.test.mjs focu
 - Local registration and sign-in are supported, but email or phone verification and password recovery are not. Use test identities; do not collect sensitive real-user information.
 - Study records are stored in the browser. They do not sync with accounts and are not isolated by account.
 - Local rooms are stored in server memory. Cloud rooms use Postgres with a 24-hour lifetime; mutations are serialized for this small demo, not optimized for high traffic.
-- Public deployment verification is still pending. This is a portfolio demo, not a production-ready service.
+- Public login, shared-room APIs, permissions, logout, runtime images, and one real AI plan passed smoke testing on October 14, 2026. Earlier AI requests failed output validation; generation may need a manual retry. This is not a model-quality evaluation or a production-readiness claim.
 
 ## Assets and Privacy
 
