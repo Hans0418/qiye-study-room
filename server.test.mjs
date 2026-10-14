@@ -16,6 +16,10 @@ test('providers route quick and deep with distinct reasoning settings', () => {
   assert.equal(deep.model,'reasoning-model'); assert.equal(deep.reasoning_effort,'medium');
   assert.equal(buildPayload('qwen',cfg,'quick','x',25).enable_thinking,false);
   assert.equal(buildPayload('seed',cfg,'deep','x',25).thinking.type,'enabled');
+  const seedPlan = buildPayload('seed',cfg,'quick','x',1);
+  assert.equal(seedPlan.response_format.type, 'json_schema');
+  assert.equal(seedPlan.response_format.json_schema.strict, true);
+  assert.match(seedPlan.messages[0].content, /最多1步/);
 });
 test('request handler rejects cross-origin, invalid input and private paths', async () => {
   const request = (path, body, origin) => new Promise((resolve,reject) => {

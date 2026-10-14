@@ -5,7 +5,10 @@ import { fileURLToPath } from 'node:url';
 import { SYSTEM_PROMPT, validatePlan } from './focus-agent.mjs';
 import { handleRooms } from './rooms.mjs';
 import { createAuthStore } from './auth.mjs';
-let authStore;
+import { cloudConfig } from './cloud-config.mjs';
+import { createDatabase, reserveUsage } from './database.mjs';
+import { createCloudAuthStore } from './cloud-auth.mjs';
+import { handleCloudRooms } from './cloud-rooms.mjs';
 
 const root = fileURLToPath(new URL('./outputs/study-room-mvp/', import.meta.url));
 const port = Number(process.env.PORT || 8766);
@@ -42,25 +45,54 @@ export function buildPayload(provider, config, mode, prompt, minutes) {
   if (provider === 'local') Object.assign(payload, { temperature: 0.2, max_tokens: 2000, response_format: { type: 'json_object' } });
   if (provider === 'openai') Object.assign(payload, { reasoning_effort: mode === 'quick' ? 'none' : 'medium', max_completion_tokens: mode === 'quick' ? 500 : 5000, response_format: { type: 'json_object' } });
   if (provider === 'qwen') Object.assign(payload, { enable_thinking: mode === 'deep', max_tokens: mode === 'quick' ? 500 : 5000 });
-  if (provider === 'seed') Object.assign(payload, { thinking: { type: mode === 'quick' ? 'disabled' : 'enabled' }, max_tokens: mode === 'quick' ? 500 : 5000 });
+  if (provider === 'seed') Object.assign(payload, { thinking: { type: mode === 'quick' ? 'disabled' : 'enabled' }, max_tokens: mode === 'quick' ? 2000 : 5000, response_format: { type: 'json_object' } });
+  if (provider === 'seed' && mode === 'quick') {
+    payload.messages[0].content += `\n输出约束：answer最多1000字，question最多200字且不需要追问时必须为空字符串，不能为null；assumptions最多3条，每条最多200字。每个action和deliverable最多200字，weight为1至100的整数。最多${Math.min(5, minutes)}步。若question非空，steps必须为空数组；否则至少一步。不擅自假设用户在备考或就读某种学校。`;
+    payload.response_format = { type: 'json_schema', json_schema: {
+      name: 'study_plan', strict: true, schema: {
+        type: 'object', additionalProperties: false,
+        required: ['answer', 'question', 'assumptions', 'steps'],
+        properties: {
+          answer: { type: 'string' }, question: { type: 'string' },
+          assumptions: { type: 'array', items: { type: 'string' } },
+          steps: { type: 'array', items: {
+            type: 'object', additionalProperties: false, required: ['action', 'deliverable', 'weight'],
+            properties: { action: { type: 'string' }, deliverable: { type: 'string' }, weight: { type: 'integer' } }
+          } }
+        }
+      }
+    } };
+  }
   return payload;
 }
-export const server = http.createServer(async (req, res) => {
+export function createRequestHandler({ cloud = cloudConfig(), databaseFactory = createDatabase } = {}) {
+  let authStore, database;
+  async function store() {
+    if (!cloud) return authStore ||= createAuthStore(fileURLToPath(new URL('./.data/accounts.sqlite', import.meta.url)));
+    database ||= databaseFactory(cloud);
+    try { return authStore ||= createCloudAuthStore(await database); }
+    catch (error) { database = undefined; throw error; }
+  }
+  return async (req, res) => {
   try {
     const host = req.headers.host;
-    if (![`127.0.0.1:${port}`, `localhost:${port}`].includes(host)) return json(res, 403, { error: '不允许的访问地址' });
-    const url = new URL(req.url, `http://${host}`);
+    const origin = cloud?.origin || `http://${host}`;
+    const allowedHosts = cloud ? [new URL(cloud.origin).host] : [`127.0.0.1:${port}`, `localhost:${port}`];
+    if (!allowedHosts.includes(host)) return json(res, 403, { error: '不允许的访问地址' });
+    const url = new URL(req.url, origin);
     if (url.pathname.startsWith('/api/')) {
-      if (req.headers.origin && req.headers.origin !== `http://${host}`) return json(res, 403, { error: '不允许的请求来源' });
+      if (req.headers.origin && req.headers.origin !== origin) return json(res, 403, { error: '不允许的请求来源' });
+      if (cloud && req.headers['sec-fetch-site'] === 'cross-site') return json(res, 403, { error: '不允许的请求来源' });
       if (url.pathname.startsWith('/api/auth/')) {
-        authStore ||= createAuthStore(fileURLToPath(new URL('./.data/accounts.sqlite', import.meta.url)));
-        return await authStore.handle(req, res, url, json);
+        return await (await store()).handle(req, res, url, json);
       }
       if (url.pathname === '/api/rooms' || url.pathname.startsWith('/api/rooms/')) {
-        authStore ||= createAuthStore(fileURLToPath(new URL('./.data/accounts.sqlite', import.meta.url)));
-        return await handleRooms(req, res, url, json, authStore.getUser(req), authStore.getRoomProfile);
+        const auth = await store();
+        const user = await auth.getUser(req);
+        if (cloud) return await handleCloudRooms(await database, req, res, url, json, user);
+        return await handleRooms(req, res, url, json, user, auth.getRoomProfile);
       }
-      if (req.method === 'GET' && url.pathname === '/api/status') return json(res, 200, { providers: { local: Boolean(process.env.LOCAL_MODEL) }, mode: 'local-only', note: 'Configuration only; not a connectivity check' });
+      if (req.method === 'GET' && url.pathname === '/api/status') return json(res, 200, { providers: cloud ? { seed: true } : { local: Boolean(process.env.LOCAL_MODEL) }, mode: cloud ? 'cloud' : 'local-only', note: 'Configuration only; not a connectivity check' });
       if (req.method !== 'POST' || url.pathname !== '/api/assist') return json(res, 404, { error: '接口不存在' });
       if (!req.headers['content-type']?.startsWith('application/json')) return json(res, 415, { error: '请求格式错误' });
       let body = '';
@@ -69,11 +101,22 @@ export const server = http.createServer(async (req, res) => {
       try { data = JSON.parse(body); } catch { return json(res, 400, { error: '请求格式错误' }); }
       const { mode, prompt, minutes, provider = 'auto' } = data || {};
       if (!['quick', 'deep'].includes(mode) || typeof prompt !== 'string' || !prompt.trim() || prompt.length > 4000 || !Number.isInteger(minutes) || minutes < 1 || minutes > 180 || !['auto', 'openai', 'qwen', 'seed'].includes(provider)) return json(res, 400, { error: '请输入有效的任务和专注时长。' });
-      const name = 'local';
-      const config = { base: 'http://127.0.0.1:11434/v1', key: 'local', quick: process.env.LOCAL_MODEL, deep: process.env.LOCAL_MODEL };
+      const name = cloud ? 'seed' : 'local';
+      const config = cloud ? { base: cloud.base, key: cloud.apiKey, quick: cloud.model, deep: cloud.model } : { base: 'http://127.0.0.1:11434/v1', key: 'local', quick: process.env.LOCAL_MODEL, deep: process.env.LOCAL_MODEL };
+      if (cloud) {
+        if (!['auto', 'seed'].includes(provider)) return json(res, 400, { error: '演示仅支持已配置的豆包模型。' });
+        const user = await (await store()).getUser(req);
+        if (!user) return json(res, 401, { error: '请先登录，再使用 AI 规划。' });
+        const windowStart = Math.floor(Date.now() / 86400000) * 86400000;
+        const allowed = await reserveUsage(await database, [
+          { key: 'ai:global', windowStart, expires: windowStart + 86400000, limit: cloud.dailyCalls },
+          { key: `ai:user:${user.id}`, windowStart, expires: windowStart + 86400000, limit: cloud.userDailyCalls }
+        ]);
+        if (!allowed) return json(res, 429, { error: '今日 AI 演示次数已用完，仍可手动设置目标并自习。', code: 'DEMO_DAILY_LIMIT' });
+      }
       if (!config[mode]) return json(res, 503, { error: '本地模型尚未配置。可以先写下目标直接开始，不会调用付费服务。' });
       if (Date.now() - windowStart > 3600000) { windowStart = Date.now(); calls = 0; }
-      if (active >= 2 || calls >= 30) return json(res, 429, { error: '请求较多，请稍后再试。' });
+      if (active >= 2 || (!cloud && calls >= 30)) return json(res, 429, { error: '请求较多，请稍后再试。' });
       active++; calls++;
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 120000);
@@ -84,7 +127,7 @@ export const server = http.createServer(async (req, res) => {
           headers: { Authorization: `Bearer ${config.key}`, 'Content-Type': 'application/json' },
           body: JSON.stringify(buildPayload(name, config, mode, prompt.trim(), minutes))
         });
-        if (!upstream.ok) return json(res, 502, { error: `Ollama 返回 HTTP ${upstream.status}，请检查模型是否已安装并可运行。`, code: `OLLAMA_HTTP_${upstream.status}` });
+        if (!upstream.ok) return json(res, 502, cloud ? { error: '云端模型暂不可用，可能是额度不足或服务繁忙。可以先手动开始。', code: 'CLOUD_MODEL_UNAVAILABLE' } : { error: `Ollama 返回 HTTP ${upstream.status}，请检查模型是否已安装并可运行。`, code: `OLLAMA_HTTP_${upstream.status}` });
         const result = await upstream.json();
         const choice = result.choices?.[0];
         if (choice?.finish_reason === 'length') throw new Error('MODEL_TRUNCATED');
@@ -94,7 +137,7 @@ export const server = http.createServer(async (req, res) => {
       } catch (error) {
         const failure = describeAIError(error);
         console.warn(`[Inook AI] ${failure.code}`);
-        if (!res.destroyed) json(res, 502, { ...failure, error: `${failure.error}（${failure.code}）` });
+        if (!res.destroyed) json(res, 502, { ...failure, error: cloud ? `AI 规划暂未完成，可以重试或手动开始。（${failure.code}）` : `${failure.error}（${failure.code}）` });
       }
       finally { clearTimeout(timeout); active--; }
       return;
@@ -108,6 +151,9 @@ export const server = http.createServer(async (req, res) => {
     const bytes = await readFile(actual);
     res.writeHead(200, { 'Content-Type': `${types[extension]}${['.js', '.css', '.html'].includes(extension) ? '; charset=utf-8' : ''}`, 'Cache-Control': 'no-cache' });
     res.end(req.method === 'HEAD' ? undefined : bytes);
-  } catch { if (!res.headersSent) json(res, 404, { error: '文件不存在' }); else res.end(); }
-});
+  } catch { if (!res.headersSent) json(res, req.url?.startsWith('/api/') ? 503 : 404, { error: req.url?.startsWith('/api/') ? '服务暂不可用，请稍后重试。' : '文件不存在' }); else res.end(); }
+  };
+}
+export const handler = createRequestHandler();
+export const server = http.createServer(handler);
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) server.listen(port, '127.0.0.1', () => console.log(`Inook: http://127.0.0.1:${port}`));

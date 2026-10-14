@@ -1,6 +1,7 @@
 .env
 .env.*
 !.env.example
+!.env.cloud.example
 *.log
 .DS_Store
 .data/
@@ -13,6 +14,8 @@
 *.pem
 *.key
 node_modules/
+dist/
+.vercel/
 
 # Audio/video assets are not distributed with the source
 *.[mM][pP]3
@@ -38,3 +41,15 @@ node_modules/
 /outputs/study-room-mvp/assets/*.[jJ][pP][gG]
 /outputs/study-room-mvp/assets/*.[jJ][pP][eE][gG]
 /outputs/study-room-mvp/assets/*.[wW][eE][bB][pP]
+
+# Runtime images selected for the portfolio deployment.
+!/outputs/study-room-mvp/assets/snow-study-window-v2.png
+!/outputs/study-room-mvp/assets/sea-sharp-v2.png
+!/outputs/study-room-mvp/assets/sea-study.png
+!/outputs/study-room-mvp/assets/rain-library.png
+!/outputs/study-room-mvp/assets/forest-natural-v3.png
+!/outputs/study-room-mvp/assets/wild-clean-v3.png
+!/outputs/study-room-mvp/assets/avatar-crayon-atlas.png
+!/outputs/study-room-mvp/assets/study-companion.png
+!/outputs/study-room-mvp/assets/study-companion-adult.png
+!/outputs/study-room-mvp/assets/sheep-walk.png

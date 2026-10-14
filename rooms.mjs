@@ -2,7 +2,8 @@ import { randomBytes } from 'node:crypto';
 const rooms = new Map();
 const token = () => randomBytes(18).toString('hex');
 const clean = (value, max) => typeof value === 'string' ? value.trim().slice(0, max) : '';
-export async function handleRooms(req, res, url, json, user = null, getProfile = () => null) {
+export async function handleRooms(req, res, url, json, user = null, getProfile = () => null, roomStore = rooms) {
+  const rooms = roomStore;
   for (const [id, room] of rooms) if (Date.now() - room.created > 86400000) rooms.delete(id);
   let body = {};
   if (req.method === 'POST') {
