@@ -4,6 +4,26 @@ import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
 
 const source = readFileSync(new URL('./outputs/study-room-mvp/task-inbox.js', import.meta.url), 'utf8');
+test('start saves selected editor drafts before handing tasks to the study session', async () => {
+  const tasks = [{ id: 'a', text: 'Old', date: '2026-10-17' }, { id: 'b', text: 'Other', date: '2026-10-17' }];
+  const writes = [];
+  const c = vm.createContext({
+    chosen: new Set(['a']), dated: () => tasks, dayKey: () => '2026-10-17',
+    taskEditors: new Map([['a', () => ({ text: 'New', notes: 'Unsaved details', minutes: null, date: '2026-10-17' })]]),
+    update(task, change) { Object.assign(task, change); writes.push(task.id); },
+    start(selected) { assert.deepEqual(writes, ['a']); assert.equal(selected[0].notes, 'Unsaved details'); return true; },
+  });
+  vm.runInContext(source.slice(source.indexOf('  async function startSelectedTasks()'), source.indexOf("  $('#chooseInboxTasks').onclick")), c);
+  assert.equal(await c.startSelectedTasks(), true);
+  assert.equal(tasks[0].text, 'New'); assert.equal(tasks[1].notes, undefined);
+  writes.length = 0;
+  c.taskEditors.set('a', () => ({ date: '2026-10-18' }));
+  await assert.rejects(c.startSelectedTasks(), /今天/);
+  assert.equal(writes.length, 0);
+  c.taskEditors.set('a', () => { throw new Error('Invalid duration'); });
+  await assert.rejects(c.startSelectedTasks(), /Invalid duration/);
+  assert.equal(writes.length, 0);
+});
 test('today tasks enter setup with a prefilled goal and checklist instead of starting the timer', async () => {
   const tasks = [{ id: 'a', text: '读书', date: '2026-10-17' }, { id: 'b', text: '写笔记', date: '2026-10-17' }];
   const c = vm.createContext({
