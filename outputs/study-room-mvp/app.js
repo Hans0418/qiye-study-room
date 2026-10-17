@@ -124,6 +124,7 @@ function updateBackdrop() {
 }
 
 function setView(view) {
+  const previousView = state.view;
   if (view !== state.view) state.bgmExpanded = false;
   const enteringSetup = view === "setup" && state.view !== "setup";
   if (view !== "focus" && state.running) pauseTimer();
@@ -139,6 +140,7 @@ function setView(view) {
   });
   if (enteringSetup) { startPreview(); offerPreviousTasks(); }
   if (view !== "focus") updateSound();
+  if (view !== previousView) window.dispatchEvent(new CustomEvent('inook:view-change', { detail: { view } }));
 }
 
 function renderScenes() {
@@ -310,6 +312,7 @@ function syncGoal(source) {
   document.querySelector("#quickSuggestion").hidden = true;
   document.querySelector("#quickStatus").textContent = '';
   if (quickController) quickController.abort();
+  window.renderGoalTaskDetails?.();
 }
 
 function escapeHTML(value) {
@@ -379,12 +382,35 @@ let agentController = null;
 let agentOriginalTask = '';
 let studyGeneration = 0;
 let previousStudyTasks = null;
-const sessionTasks = [];
+const taskInboxStore = window.QiyeTasks.create(localStorage);
+let restoredTasks = [];
+try { restoredTasks = taskInboxStore.read().filter(task => task.selected && !task.done); }
+catch { /* Keep existing stored data intact when storage cannot be read. */ }
+const sessionTasks = restoredTasks.map(task => ({ ...task }));
+function persistSessionTasks() {
+  try { taskInboxStore.sync(sessionTasks); return true; }
+  catch { document.querySelector('#inboxStatus').textContent = '未能自动保存，请保留任务内容并检查浏览器存储。'; return false; }
+}
 let unconfirmedPlan = false;
 let previousPlanTexts = [];
 const goalClock = new window.GoalClock();
 let timedGoalText = '';
+window.renderGoalTaskDetails = function () {
+  let details = document.querySelector('#goalTaskDetails');
+  if (!details) {
+    details = document.createElement('details'); details.id = 'goalTaskDetails';
+    const summary = document.createElement('summary'); summary.textContent = '任务详情';
+    details.append(summary, document.createElement('p')); goalInput.parentElement.append(details);
+  }
+  const task = sessionTasks.find(task => task.text.trim() === state.goal.trim());
+  const notes = task?.notes || '';
+  const key = task?.id || task?.text || '';
+  if (details.dataset.task !== key || details.querySelector('p').textContent !== notes) details.open = false;
+  details.dataset.task = key;
+  details.querySelector('p').textContent = notes; details.hidden = !notes;
+};
 function renderGoalClock() {
+  window.renderGoalTaskDetails?.();
   const shared = window.together?.sharedTiming?.();
   const remaining = shared ? shared.remaining : goalClock.tick();
   const done = shared ? shared.done : goalClock.done;
@@ -407,24 +433,30 @@ function completeTimedGoal() {
   renderAgentTodos(); renderSessionTasks(); renderGoalClock();
 }
 function renderSessionTasks() {
+  window.renderGoalTaskDetails?.();
+  persistSessionTasks();
+  const selectedNotice = document.querySelector('#selectedTaskNotice');
+  const unfinished = sessionTasks.filter(task => !task.done).length;
+  selectedNotice.hidden = !unfinished;
+  selectedNotice.textContent = `本轮已有 ${unfinished} 项待办`;
   const list = document.querySelector('#sessionTodoList');
   list.replaceChildren();
   const sharedTasks = window.together?.sharedTasks?.();
   if (sharedTasks) {
     document.querySelector('#sessionTodoCount').textContent = `${sharedTasks.filter(t => t.done).length}/${sharedTasks.length}`;
     document.querySelector('#sessionTodos').hidden = false;
-    if (!sharedTasks.length) { const empty = document.createElement('p'); empty.className = 'todo-empty'; empty.textContent = '等待房主添加任务'; list.append(empty); }
+    if (sharedTasks.length) { const heading = document.createElement('p'); heading.className = 'todo-empty'; heading.textContent = '房间共享'; list.append(heading); }
     for (const task of sharedTasks) {
       const row = document.createElement('label'); row.className = 'session-task-row';
       const check = document.createElement('input'); check.type = 'checkbox'; check.checked = task.done;
       check.setAttribute('aria-label', `完成：${task.text}`);
       check.onchange = () => window.together.completeSharedTask(task.id, check.checked);
-      const text = document.createElement('span'); text.textContent = `${task.text} · 预计 ${task.minutes} 分钟`;
+      const text = document.createElement('span'); text.textContent = `${task.text} · ${task.minutes ? `预计 ${task.minutes} 分钟` : '未估时'}`;
       row.append(check, text); list.append(row);
     }
-    return;
   }
-  document.querySelector('#sessionTodoCount').textContent = `${sessionTasks.filter(t => t.done).length}/${sessionTasks.length}`;
+  const allTasks = [...(sharedTasks || []), ...sessionTasks];
+  document.querySelector('#sessionTodoCount').textContent = `${allTasks.filter(t => t.done).length}/${allTasks.length}`;
   document.querySelector('#sessionTodos').hidden = false;
   const composer = document.createElement('form');
   composer.className = 'todo-composer';
@@ -432,22 +464,27 @@ function renderSessionTasks() {
   const addTask = document.createElement('details'); addTask.className = 'todo-add'; addTask.open = !sessionTasks.length;
   const addSummary = document.createElement('summary'); addSummary.textContent = '+ 添加任务';
   addTask.append(addSummary, composer);
-  composer.addEventListener('submit', event => {
+  composer.addEventListener('submit', async event => {
     event.preventDefault();
     const input = composer.elements.namedItem('task');
     const text = input.value.trim();
     if (!text) { input.setCustomValidity('请填写任务'); input.reportValidity(); return; }
     if (sessionTasks.some(task => task.text === text)) { input.setCustomValidity('这项任务已经在清单里了'); input.reportValidity(); return; }
     const task = { text, minutes: Number(composer.elements.namedItem('minutes').value), done: false };
+    const submit = composer.querySelector('button'); submit.disabled = true;
+    const keep = await (window.together?.confirmTask?.(task) ?? true);
+    submit.disabled = false;
+    if (!keep) return;
     sessionTasks.push(task);
     renderSessionTasks();
     document.querySelector('.todo-add summary').focus();
   });
   composer.elements.namedItem('task').addEventListener('input', event => event.target.setCustomValidity(''));
-  list.append(addTask);
-  if (!sessionTasks.length) {
+  list.prepend(addTask);
+  if (!allTasks.length) {
     const empty = document.createElement('p'); empty.className = 'todo-empty'; empty.textContent = '今天，想先做哪一件事？'; list.append(empty);
   }
+  if (sharedTasks && sessionTasks.length) { const heading = document.createElement('p'); heading.className = 'todo-empty'; heading.textContent = '仅自己'; list.append(heading); }
   sessionTasks.forEach((task, index) => {
     const label = document.createElement('div'); label.className = 'session-task-row';
     const grip = document.createElement('button'); grip.type = 'button'; grip.className = 'task-drag-handle'; grip.textContent = '⠿';
@@ -510,17 +547,19 @@ function renderSessionTasks() {
       state.agentTodos.filter(t => t.text === old).forEach(t => { t.text = updated; });
       if (timedGoalText === old) { timedGoalText = updated; state.goal = updated; goalInput.value = updated; setupGoalInput.value = updated; }
       task.text = updated;
+      persistSessionTasks();
       check.setAttribute('aria-label', `完成：${updated}`);
       renderAgentTodos();
     });
     const options = document.createElement('div'); options.className = 'session-task-options';
     const duration = document.createElement('label');
     const minutes = document.createElement('input');
-    minutes.type = 'number'; minutes.min = '1'; minutes.max = '180'; minutes.step = '1'; minutes.required = true; minutes.value = task.minutes || 15;
+    minutes.type = 'number'; minutes.min = '1'; minutes.max = '180'; minutes.step = '1'; minutes.value = task.minutes ?? ''; minutes.placeholder = '可选';
     minutes.setAttribute('aria-label', `待办第${index + 1}项预计分钟数`);
     minutes.addEventListener('input', () => {
       if (!minutes.checkValidity()) return;
-      task.minutes = Number(minutes.value);
+      task.minutes = minutes.value ? Number(minutes.value) : null;
+      persistSessionTasks();
       state.agentTodos.filter(t => t.text === task.text).forEach(t => { t.minutes = task.minutes; });
       renderAgentTodos();
     });
@@ -531,7 +570,7 @@ function renderSessionTasks() {
     start.disabled = task.done || (!goalClock.done && timedGoalText === task.text);
     start.addEventListener('click', () => useTaskAsGoal(task));
     const remove = document.createElement('button');
-    remove.className = 'todo-remove'; remove.textContent = '×'; remove.title = '删除待办'; remove.setAttribute('aria-label', `删除待办第${index + 1}项`);
+    remove.className = 'todo-remove'; remove.textContent = '×'; remove.title = '移回待办箱'; remove.setAttribute('aria-label', `移回待办箱第${index + 1}项`);
     remove.addEventListener('click', () => {
       sessionTasks.splice(sessionTasks.indexOf(task), 1);
       state.agentTodos = state.agentTodos.filter(t => t.text !== task.text);
@@ -542,6 +581,12 @@ function renderSessionTasks() {
     });
     options.append(duration, start, remove);
     label.append(grip, check, text, options); list.append(label);
+    if (task.notes) {
+      const details = document.createElement('details'); details.className = 'session-task-notes';
+      const summary = document.createElement('summary'); summary.textContent = '任务详情';
+      const content = document.createElement('p'); content.textContent = task.notes;
+      details.append(summary, content); label.insertBefore(details, options);
+    }
   });
 }
 function reorderSessionTask(from, to) {
@@ -571,6 +616,7 @@ function syncAgentSend() {
   send.dataset.busy = String(Boolean(agentController));
   send.title = agentController ? '停止生成' : '发送';
   send.setAttribute('aria-label', send.title);
+  document.querySelector('#agentStatus').setAttribute('aria-busy', String(Boolean(agentController)));
 }
 async function requestAI(mode, prompt, signal, minutes = state.minutes) {
   let response;
@@ -594,7 +640,7 @@ async function generateAgentTodos() {
   if (!prompt) { status.textContent = '先写下你想推进的事情。'; return; }
   agentController = new AbortController();
   syncAgentSend();
-  status.textContent = '正在梳理…';
+  status.textContent = 'AI 智能整理中…';
   try {
     const previous = state.agentTodos.map(task => ({ ...task }));
     const context = previous.length ? JSON.stringify({ task: agentOriginalTask || state.goal, currentPlan: previous, request: prompt, instruction: '根据用户的新要求调整当前计划，返回完整的未完成步骤；已完成的步骤无需重新安排。信息不足时给可开始的步骤，仅在必要时追问。' }) : prompt;
@@ -878,7 +924,7 @@ carryDialog.id = 'carryStudyDialog'; carryDialog.setAttribute('aria-labelledby',
 carryDialog.innerHTML = '<h2 id="carryStudyTitle">沿用上次的学习目标吗？</h2><p>只保留目标和待办。这次的计时与助手对话将重新开始。</p><div><button id="discardStudyTasks">全新开始</button><button id="keepStudyTasks">保留目标和待办</button></div>';
 document.body.append(carryDialog);
 function offerPreviousTasks() { if (previousStudyTasks && !carryDialog.open) carryDialog.showModal(); }
-document.querySelector('#discardStudyTasks').onclick = () => { previousStudyTasks = null; carryDialog.close(); };
+document.querySelector('#discardStudyTasks').onclick = () => { previousStudyTasks = null; carryDialog.close(); window.dispatchEvent(new Event('inook:fresh-start')); };
 carryDialog.addEventListener('cancel', () => { previousStudyTasks = null; });
 document.querySelector('#keepStudyTasks').onclick = () => {
   if (previousStudyTasks) {
@@ -889,7 +935,8 @@ document.querySelector('#keepStudyTasks').onclick = () => {
   previousStudyTasks = null; carryDialog.close();
 };
 function endStudyAndReset() {
-  previousStudyTasks = state.goal || sessionTasks.length ? { goal: state.goal, tasks: sessionTasks.map(task => ({ ...task })) } : null;
+  persistSessionTasks();
+  previousStudyTasks = state.goal || sessionTasks.length ? { goal: state.goal, tasks: sessionTasks.filter(task => !task.done && !task.fromRoom).map(task => ({ ...task })) } : null;
   studyGeneration++; agentController?.abort(); quickController?.abort();
   agentController = null; quickController = null;
   pauseTimer(); state.previewing = false;
@@ -946,8 +993,6 @@ document.querySelectorAll("[data-jump]").forEach((button) => {
   });
 });
 
-document.querySelector("#prevSceneHome").addEventListener("click", () => changeScene(-1));
-document.querySelector("#nextSceneHome").addEventListener("click", () => changeScene(1));
 document.querySelector('#prevSceneFocus').remove();
 document.querySelector('#nextSceneFocus').remove();
 const focusPopovers = ['goalTimeSettings', 'sessionTodos'].map(id => document.getElementById(id));
@@ -969,12 +1014,6 @@ pauseButton.addEventListener("click", () => {
   else startTimer();
 });
 
-document.querySelector("#shuffleButton").addEventListener("click", () => {
-  state.soundStyle = soundStyles[(soundStyles.indexOf(state.soundStyle) + 1) % (soundStyles.length - 1)];
-  rememberSound();
-  renderSoundStyles();
-  updateSound();
-});
 document.querySelector("#focusModeButton").addEventListener("click", () => {
   document.querySelector('#focusSoundPanel').hidden = true;
   toggleAgent(false);
@@ -1026,9 +1065,9 @@ function useTaskAsGoal(firstOpenTodo) {
   localStorage.setItem("inookGoal", state.goal);
   localStorage.setItem('inookPendingGoal', state.goal);
   timedGoalText = state.goal;
-  const minutes = firstOpenTodo.minutes || 15;
-  document.querySelector('#manualGoalMinutes').value = minutes;
-  goalClock.start(minutes, state.running);
+  const minutes = firstOpenTodo.minutes;
+  if (minutes) { document.querySelector('#manualGoalMinutes').value = minutes; goalClock.start(minutes, state.running); }
+  else goalClock.clear();
   importSessionTasks();
   renderGoalClock();
   toggleAgent(false);
@@ -1078,7 +1117,7 @@ document.querySelector('#quickStepButton').addEventListener('click', async () =>
   const status = document.querySelector('#quickStatus');
   const button = document.querySelector('#quickStepButton');
   quickController = new AbortController();
-  button.textContent = '取消'; status.textContent = '正在规划本轮步骤与预计用时…';
+  button.textContent = '取消'; status.textContent = 'AI 智能规划中…'; status.setAttribute('aria-busy', 'true');
   document.querySelector('#quickSuggestion').hidden = true;
   try {
     const result = await requestAI('quick', prompt, quickController.signal);
@@ -1090,7 +1129,7 @@ document.querySelector('#quickStepButton').addEventListener('click', async () =>
     document.querySelector('#quickSuggestion').hidden = false;
     status.textContent = '';
   } catch (error) { if (generation === studyGeneration) status.textContent = error.name === 'AbortError' ? '' : error.message; }
-  finally { if (generation === studyGeneration) { quickController = null; button.textContent = `规划这 ${state.minutes} 分钟`; } }
+  finally { if (generation === studyGeneration) { quickController = null; status.setAttribute('aria-busy', 'false'); button.textContent = `规划这 ${state.minutes} 分钟`; } }
 });
 document.querySelector('#useQuickStep').addEventListener('click', () => {
   if (!pendingPlan?.steps.length) return;

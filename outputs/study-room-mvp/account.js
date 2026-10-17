@@ -44,7 +44,7 @@
     $('#accountLoggedIn').hidden = !user || picking; $('#accountGuest').hidden = Boolean(user) || picking;
     $('#avatarPicker').hidden = !picking;
     paintAvatar(entry, user?.avatar); paintAvatar($('#editAvatar'), user?.avatar);
-    window.dispatchEvent(new CustomEvent('inook:account-profile', { detail: user ? { name: user.name, avatar: user.avatar } : null }));
+    window.dispatchEvent(new CustomEvent('inook:account-profile', { detail: user ? { id: user.id, name: user.name, avatar: user.avatar } : null }));
     entry.title = user ? '查看账号' : '登录或注册';
     entry.setAttribute('aria-label', user ? `${user.name}的账号` : '登录或注册');
     if (user) { $('#accountName').textContent = user.name; $('#accountIdentity').textContent = user.identity; const roomName = document.querySelector('#friendName'); if (roomName && !roomName.value) roomName.value = user.name; }
