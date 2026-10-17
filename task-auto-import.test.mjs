@@ -17,6 +17,13 @@ test('today tasks enter setup with a prefilled goal and checklist instead of sta
   assert.equal(c.state.view, 'setup'); assert.equal(c.setupGoalInput.value, '读书\n写笔记');
   assert.equal(c.sessionTasks.length, 2); assert.equal(c.previousStudyTasks, null);
   await c.start(tasks); assert.equal(c.sessionTasks.length, 2);
+  tasks[0].notes = '整理三个重点';
+  await c.start(tasks);
+  assert.equal(c.sessionTasks[0].notes, '整理三个重点');
+  assert.equal(c.sessionTasks.length, 2);
+  await c.start([{ id: 'c', text: '读书', notes: '另一项任务的详情', date: '2026-10-17' }]);
+  assert.equal(c.sessionTasks.length, 3);
+  assert.equal(c.sessionTasks[2].notes, '另一项任务的详情');
 });
 
 test('first-focus reminder survives reload, is account scoped and resets on the next date', () => {
