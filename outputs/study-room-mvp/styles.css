@@ -457,17 +457,21 @@ button {
 .home-footer {
   position: absolute;
   z-index: 18;
-  left: clamp(24px, 4.3vw, 86px);
-  right: clamp(24px, 4.3vw, 86px);
+  left: 0;
+  right: 0;
+  width: auto;
+  max-width: none;
+  border: 0;
+  box-shadow: none;
   top: calc(100vh - 28px);
   bottom: auto;
   min-height: 138px;
   display: grid;
-  grid-template-columns: minmax(320px, 1.3fr) 170px minmax(280px, 1fr) 220px;
+  grid-template-columns: minmax(0, 1fr);
   align-items: center;
   gap: 38px;
-  padding: 28px 36px;
-  border-radius: 24px;
+  padding: 28px clamp(24px, 4.3vw, 86px);
+  border-radius: 0;
   background: rgba(18, 16, 14, 0.42);
 }
 
@@ -1026,9 +1030,11 @@ input[type="range"] {
   font-size: 15px;
 }
 
-.goal-bar input::selection {
+.goal-bar input::selection, #goalInput::selection {
   background: rgba(247, 240, 228, 0.28);
 }
+
+#goalInput { field-sizing: content; width: 100%; min-width: 0; min-height: 24px; height: auto; margin: 0; padding: 0; border: 0; outline: 0; background: transparent; color: var(--ink); font: inherit; font-size: 15px; line-height: 24px; resize: none; overflow: hidden; overflow-wrap: anywhere; white-space: pre-wrap; }
 
 .control-dock {
   position: fixed;
@@ -1622,7 +1628,7 @@ input[type="range"] {
   }
 
   .home-footer {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr;
   }
 
   .social-buttons {
@@ -1697,8 +1703,8 @@ input[type="range"] {
   }
 
   .home-footer {
-    left: 16px;
-    right: 16px;
+    left: 0;
+    right: 0;
     top: calc(100svh - 18px);
     grid-template-columns: 1fr;
     gap: 18px;
@@ -1907,7 +1913,19 @@ input[type="range"] {
 .agent-panel.has-plan .agent-input textarea { min-height: 80px; }
 .agent-panel.has-plan #agentStatus { order: 4; }
 .agent-answer:empty, #agentStatus:empty { display: none; }
-#sessionTodoList { width: min(400px, calc(100vw - 48px)); max-height: min(420px, calc(100dvh - 220px)); }
+#sessionTodoPanel { position: absolute; top: calc(100% + 10px); right: 0; width: min(400px, calc(100vw - 48px)); max-height: min(420px, calc(100dvh - 220px)); overflow: auto; padding: 14px; background: #202a27; border: 1px solid #56615d; border-radius: 8px; box-sizing: border-box; }
+#sessionTodoList { position: static; width: 100%; max-height: none; overflow: visible; padding: 0; border: 0; background: none; }
+.todo-panel-header { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 12px; font-size: 12px; }
+#pasteExistingPlan { padding: 7px 10px; border: 1px solid #b5dbcc55; border-radius: 6px; background: #b5dbcc12; color: #c8e4d9; font-size: 12px; line-height: 1.5; white-space: normal; text-align: center; }
+#pasteExistingPlan:hover { background: #b5dbcc25; }
+.app .goal-bar { border-radius: 24px; padding-block: 12px; }
+.app .goal-bar > strong { display: block; }
+#goalInput { grid-column: 3; max-width: 100%; box-sizing: border-box; }
+@media (max-width: 700px) {
+  .app .goal-bar { width: calc(100vw - 32px); }
+  .app .goal-bar > strong { display: none; }
+  #goalInput { grid-column: 2; grid-row: 1; }
+}
 .session-task-row { grid-template-columns: 16px minmax(0, 1fr); border-bottom: 1px solid #ffffff14; }
 .session-task-row textarea { width: 100%; min-width: 0; resize: vertical; padding: 6px; border: 1px solid transparent; border-radius: 4px; background: transparent; color: var(--ink); font: inherit; line-height: 1.5; }
 .session-task-row textarea:hover { border-color: #ffffff25; }

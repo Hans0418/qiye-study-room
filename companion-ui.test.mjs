@@ -5,12 +5,12 @@ import vm from 'node:vm';
 import { createRequire } from 'node:module';
 const model = createRequire(import.meta.url)('./outputs/study-room-mvp/companion-store.js');
 
-test('hidden companion can be restored, including after reload, without losing progress', async () => {
-  let saved = { visible: false, food: 3, feeds: 2, target: 60, days: {} };
+test('backpack opens without showing a hidden pet or losing its progress', async () => {
+  let saved = { visible: false, food: 3, feeds: 2, target: 60, days: {}, adoptedOn: '2026-10-16' };
   function boot() {
     const nodes = new Map();
     function element() {
-      return { hidden: false, classList: { add() {}, remove() {} }, setAttribute(name, value) { this[name] = value; }, getAttribute(name) { return this[name]; }, append() {},
+      return { hidden: false, classList: { add() {}, remove() {} }, replaceChildren() {}, setAttribute(name, value) { this[name] = value; }, getAttribute(name) { return this[name]; }, append() {},
         querySelector(selector) { if (!nodes.has(selector)) nodes.set(selector, element()); return nodes.get(selector); },
         showModal() { this.open = true; }, close() { this.open = false; } };
     }
@@ -31,18 +31,23 @@ test('hidden companion can be restored, including after reload, without losing p
   let ui = boot();
   assert.equal(ui.launcher.hidden, true); assert.equal(ui.restore.hidden, false);
   await ui.restore.onclick();
-  assert.equal(ui.launcher.hidden, false); assert.equal(ui.restore.hidden, true);
+  assert.equal(ui.launcher.hidden, true); assert.equal(ui.restore.hidden, false);
   assert.equal(saved.food, 3); assert.equal(saved.feeds, 2);
-  ui.nodes.get('#companionVisible').checked = false;
-  await ui.nodes.get('#companionVisible').onchange();
+  assert.equal(ui.nodes.get('#petDetail').hidden, false);
   ui = boot();
   assert.equal(ui.restore.hidden, false);
-  await ui.restore.onclick(); assert.equal(saved.visible, true);
+  await ui.restore.onclick(); assert.equal(saved.visible, false);
   saved.feeds = 10;
   ui = boot();
   assert.equal(ui.nodes.get('img').src, './assets/study-companion-adult.png');
-  assert.equal(ui.nodes.get('.companion-portrait img').src, './assets/study-companion-adult.png');
-  assert.equal(ui.nodes.get('#companionStage').textContent, '成年猫');
+  assert.equal(ui.nodes.get('#petDetail').hidden, false);
+  saved.visible = true;
+  ui = boot();
+  assert.equal(ui.launcher.hidden, false);
+  assert.equal(ui.restore.hidden, true);
+  await ui.nodes.get('#petPutAway').onclick();
+  assert.equal(ui.launcher.hidden, true);
+  assert.equal(ui.restore.hidden, false);
 });
 
 test('leave dialog has no floating-window entry or loaded feature', () => {
@@ -51,4 +56,13 @@ test('leave dialog has no floating-window entry or loaded feature', () => {
   assert.doesNotMatch(app, /leaveStudyFloat|taskWindow|小窗继续/);
   assert.doesNotMatch(html, /task-window\.js/);
   assert.match(app, /留在书房/); assert.match(app, /结束并返回/);
+});
+test('feeding animation excludes inventory thumbnails and daily goal controls stay removed', () => {
+  const css = fs.readFileSync('outputs/study-room-mvp/companion.css', 'utf8');
+  const js = fs.readFileSync('outputs/study-room-mvp/companion.js', 'utf8');
+  assert.match(css, /#companionDialog\.is-fed \.companion-portrait \.pet-image/);
+  assert.doesNotMatch(css, /#companionDialog\.is-fed \.pet-image\s*[,\{]/);
+  assert.doesNotMatch(js, /companionTargetForm|companionTargetNote/);
+  assert.match(js, /if \(shop \? owned\.includes\(id\) : !owned\.includes\(id\)\) continue/);
+  assert.match(js, /snapshot\.activePet !== selectedPet/);
 });

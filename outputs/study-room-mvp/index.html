@@ -42,6 +42,7 @@
           <button data-jump="sound">音乐</button>
           <button data-jump="plan">目标</button>
           <button id="openCalendar">日历</button>
+          <button id="openTaskInbox">待办箱</button>
         </nav>
         <div class="account-nav">
         <button class="pill-button language-button" aria-label="语言">
@@ -66,35 +67,14 @@
           </div>
         </div>
 
-        <button class="side-arrow side-arrow-left" id="prevSceneHome" aria-label="上一个场景">
-          <span class="chevron-left"></span>
-        </button>
-        <button class="side-arrow side-arrow-right" id="nextSceneHome" aria-label="下一个场景">
-          <span class="chevron-right"></span>
-        </button>
 
         <footer class="home-footer">
           <div class="footer-brand">
             <span class="brand-mark"><img src="./assets/qiye-ocean-brand.png" alt="" width="58" height="58" /></span>
             <div>
               <strong>栖页</strong>
-              <small>一个专注学习与成长的空间，让每一次学习都更有深度。</small>
+              <small>留一点时间给自己，也给想做的事。</small>
             </div>
-          </div>
-          <div class="footer-links">
-            <strong>产品</strong>
-            <button data-jump="scene">场景</button>
-            <button data-jump="sound">音乐</button>
-            <button data-jump="plan">目标</button>
-          </div>
-          <div class="footer-note">
-            <strong>资源</strong>
-            <span>学习方法与使用指南将在正式版开放。</span>
-          </div>
-          <div class="social-buttons" aria-label="社交入口">
-            <button aria-label="小红书">小</button>
-            <button aria-label="抖音">抖</button>
-            <button aria-label="微信">微</button>
           </div>
         </footer>
       </section>
@@ -159,6 +139,7 @@
               </label>
               <div class="goal-help-row">
                 <button id="resumeGoalButton" hidden></button>
+                <button id="selectedTaskNotice" hidden></button>
                 <button id="quickStepButton" hidden>规划这 50 分钟</button>
               </div>
               <p id="quickStatus" role="status"></p>
@@ -207,9 +188,9 @@
         <section class="goal-bar" aria-label="今日目标">
           <span class="target-dot"></span>
           <strong>本轮目标</strong>
-          <input id="goalInput" placeholder="自由专注" maxlength="300" aria-label="本轮目标" />
+          <textarea id="goalInput" rows="1" placeholder="自由专注" maxlength="300" aria-label="本轮目标"></textarea>
           <div class="manual-goal-time"><span id="goalEstimate"></span><details id="goalTimeSettings"><summary title="调整目标计时">用时</summary><div><label>从现在起 <input id="manualGoalMinutes" type="number" min="1" max="180" step="1" value="15" required aria-label="本轮目标预计分钟数" /> 分钟</label><button id="applyGoalMinutes">开始计时</button></div></details></div>
-          <details id="sessionTodos"><summary>待办 <span id="sessionTodoCount">0</span></summary><div id="sessionTodoList"></div></details>
+          <details id="sessionTodos"><summary>待办 <span id="sessionTodoCount">0</span></summary><div id="sessionTodoPanel"><header class="todo-panel-header"><span>待办清单</span><button id="pasteExistingPlan" type="button">已有计划，整理成清单</button></header><div id="sessionTodoList"></div></div></details>
           <div id="goalTimePrompt" hidden>
             <p role="status">预计时间到了，这项任务完成了吗？</p>
             <button id="completeTimedGoal">已完成</button>
@@ -241,16 +222,14 @@
 
         <button id="leaveFocusMode" type="button">退出专注模式</button>
         <aside id="focusSoundPanel" hidden aria-label="音乐调节">
-          <div class="agent-head"><strong>声音氛围</strong><button id="closeFocusSound" class="agent-close" aria-label="关闭音乐调节"><span class="close-icon"></span></button></div>
+          <div class="agent-head"><div><span>听见此刻</span><strong>声音氛围</strong></div><button id="closeFocusSound" class="agent-close" aria-label="关闭音乐调节" title="关闭"><span class="close-icon" aria-hidden="true"></span></button></div>
+          <div class="sound-track-heading"><span>背景音乐</span></div>
           <label class="dock-range">
-            <span>音乐</span>
+            <span>音乐音量</span>
             <input id="dockMusicVolume" type="range" min="0" max="100" value="58" />
           </label>
-          <button class="dock-icon" id="shuffleButton" aria-label="切换音乐" title="切换音乐">
-            <span class="shuffle-icon"></span>
-          </button>
           <label class="dock-range">
-            <span>背景音</span>
+            <span>环境音量</span>
             <input id="dockAmbientVolume" type="range" min="0" max="100" value="44" />
           </label>
         </aside>
@@ -297,10 +276,25 @@
       </section>
     </main>
 
+    <dialog id="taskInbox" aria-labelledby="taskInboxTitle">
+      <header><div><h2 id="taskInboxTitle">我的待办</h2><p id="inboxStatus" role="status"></p></div><button id="closeTaskInbox" aria-label="关闭待办箱" title="关闭">×</button></header>
+      <div class="inbox-tabs" role="tablist" aria-label="待办入口"><button id="browseInbox" role="tab" aria-selected="true">待办箱</button><button id="pasteInbox" role="tab" aria-selected="false">粘贴已有计划</button></div>
+      <section id="inboxBrowse">
+        <div class="agenda-month"><button id="prevTaskYear" aria-label="上一年" title="上一年">«</button><button id="prevTaskMonth" aria-label="上个月" title="上个月">‹</button><div id="taskMonth"><select id="taskYearPicker" aria-label="选择年份"></select><select id="taskMonthPicker" aria-label="选择月份"></select></div><button id="nextTaskMonth" aria-label="下个月" title="下个月">›</button><button id="nextTaskYear" aria-label="下一年" title="下一年">»</button></div>
+        <div class="agenda-calendar-caption"><span id="selectedTaskDate"></span><button id="taskToday">回到今天</button></div>
+        <div id="taskCalendar" class="agenda-calendar" aria-label="事项日历"></div>
+        <div class="agenda-toolbar"><h3 id="taskDayTitle">今日事项</h3><button id="selectAllTasks">全选</button></div>
+        <form id="addDatedTask"><input aria-label="添加事项" placeholder="想做什么？" maxlength="300" required /><button type="submit" aria-label="添加事项" title="添加事项">＋</button></form>
+        <div id="inboxList"></div><details id="completedTaskArchive"><summary id="completedArchiveTitle">已完成记录</summary><div id="completedArchiveList"></div></details><footer><button id="undoInboxTask" hidden>撤销完成</button><button id="chooseInboxTasks" disabled>立即开始</button></footer>
+      </section>
+      <section id="inboxImport" hidden><label for="taskPaste">已有计划</label><textarea id="taskPaste" maxlength="4000" rows="5" placeholder="粘贴计划、备忘录或任务清单"></textarea><div class="agenda-toolbar"><button id="parseTaskPaste" disabled>AI 智能识别</button><label>安排日期 <input type="date" id="importTaskDate" /></label><button id="selectAllDrafts" hidden>全选</button></div><div id="importPreview"></div><footer><button id="saveTaskImport" hidden>安排到这一天</button><button id="startTaskImport" hidden>立即开始</button></footer></section>
+    </dialog>
     <script src="./ambient.js?v=20260928-wild-r1"></script>
     <script src="./bgm.js?v=20260928-night-bgm"></script>
     <script src="./goal-clock.js"></script>
+    <script src="./task-store.js"></script>
     <script src="./app.js?v=20261003-goal-clock"></script>
+    <script src="./task-inbox.js"></script>
     <script src="./calendar-store.js"></script>
     <script src="./calendar.js"></script>
     <script src="./together.js"></script>
@@ -309,5 +303,9 @@
     <script src="./visual.js"></script>
     <script src="./companion-store.js"></script>
     <script src="./companion.js"></script>
+    <script src="./history-backup.js"></script>
+    <script src="./personal-sync.js"></script>
+    <script src="./diary.js"></script>
+    <link rel="stylesheet" href="./diary.css" />
   </body>
 </html>

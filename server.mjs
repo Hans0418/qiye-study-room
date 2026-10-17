@@ -3,6 +3,8 @@ import { readFile, realpath } from 'node:fs/promises';
 import { resolve, extname, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { SYSTEM_PROMPT, validatePlan } from './focus-agent.mjs';
+import { IMPORT_PROMPT, validateImport } from './task-import.mjs';
+import { createPersonalRecords, createCloudPersonalRecords, handlePersonalRecords } from './personal-records.mjs';
 import { handleRooms } from './rooms.mjs';
 import { createAuthStore } from './auth.mjs';
 import { cloudConfig } from './cloud-config.mjs';
@@ -42,6 +44,7 @@ export function buildPayload(provider, config, mode, prompt, minutes) {
     ]
   };
   if (mode === 'quick') payload.messages[0].content = SYSTEM_PROMPT;
+  if (mode === 'organize') { payload.messages[0].content = IMPORT_PROMPT; payload.messages[1].content = JSON.stringify({ source: prompt }); }
   if (provider === 'local') Object.assign(payload, { temperature: 0.2, max_tokens: 2000, response_format: { type: 'json_object' } });
   if (provider === 'openai') Object.assign(payload, { reasoning_effort: mode === 'quick' ? 'none' : 'medium', max_completion_tokens: mode === 'quick' ? 500 : 5000, response_format: { type: 'json_object' } });
   if (provider === 'qwen') Object.assign(payload, { enable_thinking: mode === 'deep', max_tokens: mode === 'quick' ? 500 : 5000 });
@@ -63,10 +66,18 @@ export function buildPayload(provider, config, mode, prompt, minutes) {
       }
     } };
   }
+  if (mode === 'organize') {
+    payload.messages[0].content += '\n事项不限于学习和工作，也包括生活与生理需求。口语、粗俗用词不是过滤依据。例如“我想拉屎”应识别为一条“上厕所”，notes为空，minutes为null；“想睡觉”“去吃饭”“洗澡”也都是有效待办。不评判、不拒绝、不扩写卫生或医疗建议。';
+    payload.messages[0].content += '\n短输入也必须保留：例如用户输入“写作业”，返回一条text为“写作业”、notes为空字符串、minutes为null的事项。内容笼统但表达了行动时，不要返回空数组，也不要编造细节。';
+    payload.messages[0].content += '\n这是提取，不是规划。notes只能摘录原文已有行动，不得补充建议、示例或常识步骤。相同交付物下的动作合成一个事项，例如“制作PPT，搭框架并优化视觉”只生成一件“制作PPT”，notes为“搭框架；优化视觉”。';
+    payload.temperature = 0.1;
+    if (provider === 'local') payload.max_tokens = 4000;
+    if (provider === 'seed') payload.thinking = { type: 'disabled' };
+  }
   return payload;
 }
 export function createRequestHandler({ cloud = cloudConfig(), databaseFactory = createDatabase } = {}) {
-  let authStore, database;
+  let authStore, database, personalRecords;
   async function store() {
     if (!cloud) return authStore ||= createAuthStore(fileURLToPath(new URL('./.data/accounts.sqlite', import.meta.url)));
     database ||= databaseFactory(cloud);
@@ -86,6 +97,11 @@ export function createRequestHandler({ cloud = cloudConfig(), databaseFactory = 
       if (url.pathname.startsWith('/api/auth/')) {
         return await (await store()).handle(req, res, url, json);
       }
+      if (url.pathname.startsWith('/api/personal/')) {
+        const user = await (await store()).getUser(req);
+        if (!personalRecords) personalRecords = cloud ? createCloudPersonalRecords(await database) : createPersonalRecords(fileURLToPath(new URL('./.data/personal.sqlite', import.meta.url)));
+        return await handlePersonalRecords(req, res, url, json, user, personalRecords);
+      }
       if (url.pathname === '/api/rooms' || url.pathname.startsWith('/api/rooms/')) {
         const auth = await store();
         const user = await auth.getUser(req);
@@ -100,9 +116,10 @@ export function createRequestHandler({ cloud = cloudConfig(), databaseFactory = 
       let data;
       try { data = JSON.parse(body); } catch { return json(res, 400, { error: '请求格式错误' }); }
       const { mode, prompt, minutes, provider = 'auto' } = data || {};
-      if (!['quick', 'deep'].includes(mode) || typeof prompt !== 'string' || !prompt.trim() || prompt.length > 4000 || !Number.isInteger(minutes) || minutes < 1 || minutes > 180 || !['auto', 'openai', 'qwen', 'seed'].includes(provider)) return json(res, 400, { error: '请输入有效的任务和专注时长。' });
+      if (!['quick', 'deep', 'organize'].includes(mode) || typeof prompt !== 'string' || !prompt.trim() || prompt.length > 4000 || !Number.isInteger(minutes) || minutes < 1 || minutes > 180 || !['auto', 'openai', 'qwen', 'seed'].includes(provider)) return json(res, 400, { error: '请输入有效的任务和专注时长。' });
       const name = cloud ? 'seed' : 'local';
       const config = cloud ? { base: cloud.base, key: cloud.apiKey, quick: cloud.model, deep: cloud.model } : { base: 'http://127.0.0.1:11434/v1', key: 'local', quick: process.env.LOCAL_MODEL, deep: process.env.LOCAL_MODEL };
+      config.organize = config.quick;
       if (cloud) {
         if (!['auto', 'seed'].includes(provider)) return json(res, 400, { error: '演示仅支持已配置的豆包模型。' });
         const user = await (await store()).getUser(req);
@@ -132,7 +149,7 @@ export function createRequestHandler({ cloud = cloudConfig(), databaseFactory = 
         const choice = result.choices?.[0];
         if (choice?.finish_reason === 'length') throw new Error('MODEL_TRUNCATED');
         if (choice?.finish_reason !== 'stop') throw new Error('MODEL_RESPONSE');
-        const parsed = mode === 'quick' ? validatePlan(JSON.parse(choice.message.content), minutes) : validateResult(JSON.parse(choice.message.content), mode);
+        const parsed = mode === 'quick' ? validatePlan(JSON.parse(choice.message.content), minutes) : mode === 'organize' ? validateImport(JSON.parse(choice.message.content)) : validateResult(JSON.parse(choice.message.content), mode);
         json(res, 200, { ...parsed, model: config[mode] });
       } catch (error) {
         const failure = describeAIError(error);

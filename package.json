@@ -9,7 +9,7 @@
     "cloud:check": "node --env-file=.env.cloud cloud-integration-check.mjs",
     "cloud:workflow": "node --env-file=.env.cloud cloud-workflow-check.mjs",
     "start": "node --env-file=.env server.mjs",
-    "test": "node --test server.test.mjs auth.test.mjs rooms.test.mjs ai-errors.test.mjs focus-agent.test.mjs companion-store.test.cjs companion-ui.test.mjs goal-clock.test.cjs calendar-store.test.cjs together.test.mjs task-order.test.mjs cloud-config.test.mjs database.test.mjs cloud-runtime.test.mjs"
+    "test": "node --test server.test.mjs auth.test.mjs rooms.test.mjs ai-errors.test.mjs focus-agent.test.mjs companion-store.test.cjs companion-ui.test.mjs goal-clock.test.cjs calendar-store.test.cjs together.test.mjs task-order.test.mjs task-store.test.cjs task-import.test.mjs task-auto-import.test.mjs cloud-config.test.mjs database.test.mjs cloud-runtime.test.mjs history-backup.test.cjs personal-records.test.mjs diary-ui.test.mjs"
   },
   "dependencies": { "pg": "8.16.3" }
 }

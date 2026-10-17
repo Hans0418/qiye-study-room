@@ -7,7 +7,7 @@
   let composingGoal = false, goalEditedAt = 0, lastTimerSignature = '', sharedTimer, sharedDone = false;
   let lastTaskSignature = '', receivedTaskSignature = '';
   function taskSnapshot() {
-    return sessionTasks.map(task => { task.id ||= crypto.randomUUID(); return { id: task.id, text: task.text, minutes: task.minutes || 15 }; });
+    return sessionTasks.map(task => { task.id ||= crypto.randomUUID(); return { id: task.id, text: task.text, minutes: task.minutes ?? null }; });
   }
   function receiveTasks() {
     const signature = JSON.stringify(room.tasks || []);
@@ -32,14 +32,46 @@
   const goalField = document.createElement('div'); goalField.className = 'shared-goal-field';
   goalInput.before(goalField); goalField.append(goalInput, goalControl);
   const goalEditor = document.createElement('dialog'); goalEditor.id = 'sharedGoalDialog';
-  goalEditor.innerHTML = '<form method="dialog"><h2>目标安排</h2><p id="sharedGoalHint"></p><textarea maxlength="300" aria-label="个人目标"></textarea><p role="status"></p><footer><button value="cancel">取消</button><button type="button" id="saveSharedMode">确认</button></footer></form>';
+  goalEditor.innerHTML = '<form method="dialog"><h2>目标安排</h2><p id="sharedGoalHint"></p><textarea maxlength="300" aria-label="个人目标"></textarea><p id="goalDraftPreview" hidden></p><p role="status"></p><footer><button value="cancel">取消</button><button type="button" id="saveSharedMode">确认</button><button type="button" id="shareEditedGoal" hidden>同步到房间</button></footer></form>';
   document.body.append(goalEditor);
+  const taskDialog = document.createElement('dialog'); taskDialog.id = 'sharedTaskDialog';
+  taskDialog.setAttribute('aria-label', '同步待办');
+  taskDialog.innerHTML = '<form method="dialog"><h2>同步这项待办？</h2><p>同步后，房主和房间成员都能看到。选择仅自己，不会修改房间清单。</p><p id="sharedTaskPreview"></p><p role="status"></p><footer><button value="cancel">取消</button><button type="button" id="keepTaskPrivate">仅自己</button><button type="button" id="shareTask">同步到房间</button></footer></form>';
+  document.body.append(taskDialog);
+  function confirmTask(task) {
+    if (!entered || !credentials.memberToken) return Promise.resolve(true);
+    const version = revision, currentId = id;
+    task.id ||= crypto.randomUUID();
+    taskDialog.querySelector('#sharedTaskPreview').textContent = task.text;
+    taskDialog.querySelector('[role="status"]').textContent = '';
+    return new Promise(resolve => {
+      let settled = false;
+      const finish = value => { if (settled) return; settled = true; taskDialog.close(); resolve(value); };
+      taskDialog.onclose = () => finish(false);
+      taskDialog.querySelector('#keepTaskPrivate').onclick = () => finish(version === revision);
+      const share = taskDialog.querySelector('#shareTask'); share.disabled = false;
+      const privateButton = taskDialog.querySelector('#keepTaskPrivate');
+      const cancelButton = taskDialog.querySelector('button[value="cancel"]');
+      taskDialog.oncancel = event => { if (share.disabled) event.preventDefault(); };
+      share.onclick = async () => {
+        if (version !== revision || currentId !== id) { finish(false); return; }
+        share.disabled = true; privateButton.disabled = true; cancelButton.disabled = true;
+        try {
+          await api(`/${currentId}/tasks`, { ...credentials, task });
+          if (version === revision) await poll();
+          finish(false);
+        } catch (error) { taskDialog.querySelector('[role="status"]').textContent = error.message; }
+        finally { share.disabled = false; privateButton.disabled = false; cancelButton.disabled = false; }
+      };
+      taskDialog.showModal();
+    });
+  }
   function following() { return Boolean(credentials.memberToken && credentials.goalMode !== 'own'); }
   function renderGoalMode() {
     goalControl.hidden = !credentials.memberToken || !entered;
-    goalInput.readOnly = following() && entered;
+    goalInput.readOnly = Boolean(credentials.memberToken && entered);
     goalInput.placeholder = following() && entered ? '等待房主设置目标' : '自由专注';
-    goalControl.textContent = following() ? '跟随房主 · 改用自己的目标' : '个人目标 · 重新跟随房主';
+    goalControl.textContent = following() ? '改用自己的目标' : '重新跟随房主';
     document.querySelector('#goalTimeSettings').hidden = following() && entered;
   }
   function applySharedGoal(value) {
@@ -47,15 +79,21 @@
     state.goal = value; goalInput.value = value; setupGoalInput.value = value;
     lastSharedGoal = value;
   }
-  function editGoalMode() {
-    const toOwn = following();
+  function editGoalMode(editOwn = false) {
+    const toOwn = editOwn === true || following();
+    goalEditor.dataset.stage = 'edit';
+    goalEditor.querySelector('h2').textContent = toOwn ? '改用自己的目标' : '重新跟随房主';
+    goalEditor.querySelector('#saveSharedMode').textContent = '确认';
+    goalEditor.querySelector('#shareEditedGoal').hidden = true;
+    goalEditor.querySelector('#goalDraftPreview').hidden = true;
     goalEditor.dataset.toOwn = String(toOwn);
-    goalEditor.querySelector('#sharedGoalHint').textContent = toOwn ? '修改只影响你自己，不需要房主同意。' : `将使用房主当前目标：${room.goal || '等待房主设置目标'}。你的个人目标草稿会保留。`;
+    goalEditor.querySelector('#sharedGoalHint').textContent = toOwn ? '这一轮，你想推进什么？' : `将使用房主当前目标：${room.goal || '等待房主设置目标'}。你的个人目标草稿会保留。`;
     const input = goalEditor.querySelector('textarea'); input.hidden = !toOwn; input.value = personalDraft || state.goal;
     goalEditor.querySelector('[role="status"]').textContent = '';
     goalEditor.showModal();
   }
   goalControl.onclick = editGoalMode;
+  goalInput.addEventListener('click', () => { if (entered && credentials.memberToken) editGoalMode(true); });
   goalInput.addEventListener('input', () => {
     if (entered && credentials.memberToken && !following()) {
       personalDraft = goalInput.value; credentials.goal = personalDraft; remember();
@@ -63,7 +101,21 @@
   });
   goalEditor.querySelector('#saveSharedMode').onclick = async () => {
     const button = goalEditor.querySelector('#saveSharedMode'), version = revision;
+    if (goalEditor.dataset.toOwn === 'true' && goalEditor.dataset.stage === 'edit') {
+      const draft = goalEditor.querySelector('textarea').value.trim();
+      if (!draft) { goalEditor.querySelector('[role="status"]').textContent = '先写下这一轮想做的事。'; return; }
+      goalEditor.dataset.stage = 'confirm';
+      goalEditor.querySelector('h2').textContent = '同步这个目标？';
+      goalEditor.querySelector('#sharedGoalHint').textContent = '同步后，将替换房主和跟随成员的当前目标，原目标计时会清除。选择仅自己，不会修改房间目标。';
+      goalEditor.querySelector('textarea').hidden = true;
+      const preview = goalEditor.querySelector('#goalDraftPreview'); preview.hidden = false; preview.textContent = draft;
+      goalEditor.querySelector('[role="status"]').textContent = '';
+      button.textContent = '仅自己'; goalEditor.querySelector('#shareEditedGoal').hidden = false;
+      return;
+    }
     button.disabled = true;
+    goalEditor.querySelector('#shareEditedGoal').disabled = true;
+    goalEditor.querySelector('button[value="cancel"]').disabled = true;
     try {
       const toOwn = goalEditor.dataset.toOwn === 'true';
       const draft = goalEditor.querySelector('textarea').value.trim();
@@ -74,8 +126,22 @@
       credentials.goalMode = toOwn ? 'own' : 'follow'; credentials.goal = personalDraft; remember();
       applySharedGoal(toOwn ? personalDraft : room.goal); receiveTimer(); renderGoalMode(); renderGoalClock(); renderSessionTasks(); goalEditor.close();
     } catch (error) { goalEditor.querySelector('[role="status"]').textContent = error.message; }
-    finally { button.disabled = false; }
+    finally { button.disabled = false; goalEditor.querySelector('#shareEditedGoal').disabled = false; goalEditor.querySelector('button[value="cancel"]').disabled = false; }
   };
+  goalEditor.querySelector('#shareEditedGoal').onclick = async () => {
+    const version = revision, button = goalEditor.querySelector('#shareEditedGoal');
+    const own = goalEditor.querySelector('#saveSharedMode'), cancel = goalEditor.querySelector('button[value="cancel"]');
+    button.disabled = own.disabled = cancel.disabled = true;
+    try {
+      const draft = goalEditor.querySelector('textarea').value.trim();
+      await api(`/${id}/share-goal`, { ...credentials, goal: draft });
+      if (version !== revision) return;
+      credentials.goalMode = 'follow'; personalDraft = draft; credentials.goal = draft; remember();
+      room.goal = draft; room.goalTimer = null; applySharedGoal(draft); receiveTimer(); renderGoalMode(); renderGoalClock(); goalEditor.close();
+    } catch (error) { goalEditor.querySelector('[role="status"]').textContent = error.message; }
+    finally { button.disabled = own.disabled = cancel.disabled = false; }
+  };
+  goalEditor.oncancel = event => { if (goalEditor.querySelector('#saveSharedMode').disabled) event.preventDefault(); };
   const enter = document.querySelector('#enterRoomButton');
   const originalEnter = enter.innerHTML;
   const dialog = document.createElement('dialog'); dialog.id = 'togetherDialog';
@@ -179,7 +245,7 @@
       if (entered && credentials.hostToken && !composingGoal && Date.now() - goalEditedAt >= 500 && (state.goal !== lastSharedGoal || timerSignature() !== lastTimerSignature || taskSignature !== lastTaskSignature)) {
         const goal = state.goal;
         const signature = timerSignature();
-        await api(`/${currentId}/goal`, { ...credentials, goal, goalTimer: timerSnapshot(), tasks });
+        await api(`/${currentId}/goal`, { ...credentials, goal, baseGoal: lastSharedGoal, updateGoal: goal !== lastSharedGoal, goalTimer: timerSnapshot(), tasks, baseTaskIds: (room?.tasks || []).map(task => task.id) });
         if (version !== revision) return;
         lastSharedGoal = goal;
         lastTimerSignature = signature;
@@ -188,13 +254,20 @@
       const result = await api(`/${currentId}`);
       if (version !== revision || currentId !== id) return;
       room = result;
-      if (entered && following()) { receiveTimer(); receiveTasks(); }
+      if (entered && credentials.hostToken) {
+        if (state.goal === lastSharedGoal && room.goal !== lastSharedGoal) { applySharedGoal(room.goal); goalClock.clear(); renderGoalClock(); }
+        const known = JSON.parse(lastTaskSignature || '[]');
+        const additions = (room.tasks || []).filter(task => !known.some(old => old.id === task.id) && !sessionTasks.some(local => local.id === task.id));
+        if (additions.length) { sessionTasks.push(...additions.map(task => ({ ...task, done: false, fromRoom: true }))); renderSessionTasks(); }
+      }
+      if (entered && following()) receiveTimer();
+      if (entered && credentials.memberToken) receiveTasks();
       if (entered && credentials.memberToken && !following() && credentials.goal !== state.goal) {
         personalDraft = state.goal; credentials.goal = personalDraft; remember();
       }
       if (entered && following() && room.goal !== lastSharedGoal) {
         applySharedGoal(room.goal);
-        goalControl.textContent = '房主更新了目标 · 改用自己的目标';
+        goalControl.textContent = '改用自己的目标';
       }
       if (room.closed || (room.startedAt && room.serverNow >= room.startedAt + room.minutes * 60000)) {
         const wasEntered = entered;
@@ -283,9 +356,9 @@
     if (id) { show(); return; }
     configure();
   };
-  window.together = { configuring: () => mode, create, leave,
-    sharedTasks: () => following() && entered ? (room?.tasks || []).map(task => ({ ...task, done: Boolean(credentials.completedTasks?.[task.id]) })) : undefined,
-    completeSharedTask: (taskId, done) => { if (!following() || !room?.tasks?.some(task => task.id === taskId)) return; credentials.completedTasks ||= {}; credentials.completedTasks[taskId] = Boolean(done); remember(); renderSessionTasks(); },
+  window.together = { configuring: () => mode, create, leave, confirmTask,
+    sharedTasks: () => credentials.memberToken && entered ? (room?.tasks || []).map(task => ({ ...task, done: Boolean(credentials.completedTasks?.[task.id]) })) : undefined,
+    completeSharedTask: (taskId, done) => { if (!credentials.memberToken || !entered || !room?.tasks?.some(task => task.id === taskId)) return; credentials.completedTasks ||= {}; credentials.completedTasks[taskId] = Boolean(done); remember(); renderSessionTasks(); },
     sharedTiming: () => following() && entered ? { remaining: sharedTimer ? sharedTimer.deadline === null ? sharedTimer.remaining : Math.max(0, sharedTimer.deadline - Date.now()) : null, done: sharedDone } : undefined,
     completeSharedGoal: () => { if (!following() || !entered) return false; sharedDone = true; return true; },
     canEditGoal: () => { if (following() && entered) { editGoalMode(); return false; } return true; }, solo: () => { mode = false; enter.innerHTML = originalEnter; } };

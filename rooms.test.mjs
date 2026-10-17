@@ -2,6 +2,46 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { handleRooms } from './rooms.mjs';
 const host = { id: 'host', name: 'Host' }, guestUser = { id: 'guest', name: 'Guest' };
+test('shared tasks preserve unspecified duration for host and guest', async () => {
+  const { data: created } = await call('/api/rooms', { scene: 'sea', minutes: 25 });
+  const path = `/api/rooms/${created.id}`;
+  const { data: guest } = await call(`${path}/join`, {}, guestUser);
+  const task = { id: 'no-estimate', text: 'Read notes', minutes: null };
+  assert.equal((await call(`${path}/tasks`, { ...guest, task }, guestUser)).status, 200);
+  assert.equal((await call(`${path}/goal`, { ...created, goal: 'Read', tasks: [task] })).status, 200);
+  assert.deepEqual((await call(path)).data.tasks, [task]);
+});
+test('member goal sharing is authorized and stale host timer updates cannot overwrite it', async () => {
+  const { data: created } = await call('/api/rooms', { scene: 'sea', minutes: 25, goal: 'Old' });
+  const path = `/api/rooms/${created.id}`;
+  const { data: guest } = await call(`${path}/join`, {}, guestUser);
+  await call(`${path}/goal`, { ...created, goal: 'Old', goalTimer: { remaining: 60000, running: true } });
+  assert.equal((await call(`${path}/share-goal`, { ...guest, goal: 'New' }, { id: 'outsider' })).status, 403);
+  assert.equal((await call(`${path}/share-goal`, { ...guest, goal: ' ' }, guestUser)).status, 400);
+  assert.equal((await call(`${path}/share-goal`, { ...guest, goal: 'New' }, guestUser)).status, 200);
+  await call(`${path}/goal`, { ...created, goal: 'Old', baseGoal: 'Old', updateGoal: false, goalTimer: { remaining: 60000, running: true } });
+  const result = (await call(path)).data;
+  assert.equal(result.goal, 'New'); assert.equal(result.goalTimer, null);
+  assert.equal((await call(`${path}/goal`, { ...created, goal: 'Another', baseGoal: 'Old', updateGoal: true })).status, 409);
+  await call(`${path}/close`, created);
+  assert.equal((await call(`${path}/share-goal`, { ...guest, goal: 'New' }, guestUser)).status, 410);
+});
+test('members append tasks safely; stale host writes preserve new additions', async () => {
+  const { data: created } = await call('/api/rooms', { scene: 'sea', minutes: 25 });
+  const path = `/api/rooms/${created.id}`;
+  const { data: guest } = await call(`${path}/join`, {}, guestUser);
+  const task = { id: 'shared-new', text: 'Prepare notes', minutes: 10 };
+  assert.equal((await call(`${path}/tasks`, { ...guest, task }, { id: 'outsider' })).status, 403);
+  assert.equal((await call(`${path}/tasks`, { ...guest, task: { ...task, minutes: 0 } }, guestUser)).status, 400);
+  assert.equal((await call(`${path}/tasks`, { ...guest, task }, guestUser)).status, 200);
+  await call(`${path}/tasks`, { ...guest, task }, guestUser);
+  await call(`${path}/goal`, { ...created, goal: 'Updated', tasks: [], baseTaskIds: [] });
+  assert.deepEqual((await call(path)).data.tasks, [task]);
+  await call(`${path}/goal`, { ...created, goal: 'Updated', tasks: [], baseTaskIds: [task.id] });
+  assert.deepEqual((await call(path)).data.tasks, []);
+  await call(`${path}/close`, created);
+  assert.equal((await call(`${path}/tasks`, { ...guest, task }, guestUser)).status, 410);
+});
 async function call(path, body, user = host, getProfile = () => null) {
   let result;
   const req = { method: body ? 'POST' : 'GET', headers: { 'content-type': 'application/json' }, async *[Symbol.asyncIterator]() { yield JSON.stringify(body); } };

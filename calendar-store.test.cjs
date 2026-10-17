@@ -1,6 +1,23 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const createStore = require('./outputs/study-room-mvp/calendar-store.js');
+for (const view of ['home', 'setup', 'focus']) {
+  test(`check-in study action preserves ${view} context and only navigates from home`, () => {
+    const source = require('node:fs').readFileSync('./outputs/study-room-mvp/calendar.js', 'utf8');
+    const handler = source.slice(source.indexOf("  cheer.querySelector('#cheerStudy').onclick"), source.indexOf('  const $ = selector'));
+    const button = {}, app = { dataset: { view } };
+    let cheerClosed = 0, calendarClosed = 0, setupClicks = 0;
+    require('node:vm').runInNewContext(handler, {
+      cheer: { close() { cheerClosed++; }, querySelector: () => button },
+      dialog: { close() { calendarClosed++; } },
+      document: { querySelector: selector => selector === '.app' ? app : { click() { setupClicks++; } } },
+    });
+    button.onclick();
+    assert.equal(cheerClosed, 1); assert.equal(calendarClosed, 1);
+    assert.equal(setupClicks, view === 'home' ? 1 : 0);
+    assert.equal(app.dataset.view, view);
+  });
+}
 test('calendar retains legacy history, successive days, stale tabs and undo', () => {
   const map = new Map();
   const storage = { get length() { return map.size; }, key: i => [...map.keys()][i], getItem: key => map.get(key) ?? null, setItem: (key, value) => map.set(key, value) };

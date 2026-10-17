@@ -48,7 +48,101 @@
 .companion-note { font-size: 12px; color: #a3b7ad; margin-bottom: 0; }
 #companionMessage { font-size: 13px; color: #c1e5d7; margin: 8px 0 0; min-height: 18px; }
 #calendarCompanion { font-size: 12px; color: #c1e5d7; padding: 6px 0; border: 0; background: none; }
-html[data-motion="on"] .is-fed img { animation: companion-nuzzle 650ms ease 3; }
 .is-fed .companion-heart { opacity: 1; }
 @keyframes companion-nuzzle { 50% { transform: translateY(-4px) rotate(-3deg); } }
 @media (max-width: 600px) { #companionLauncher { width: 74px; bottom: 12px; left: 12px; } #companionLauncher img { height: 65px; } .app[data-view="focus"] #companionLauncher { bottom: 156px; right: 10px; } #companionDialog { padding: 18px; } }
+
+/* Pet space uses a warm blush palette, separate from the study-room controls. */
+#companionDialog { width: min(460px, calc(100vw - 24px)); background: #fff2f5; color: #513c4b; border-color: #eed3dd; padding: 26px; font-family: 'Yuanti SC', 'Hiragino Maru Gothic ProN', 'PingFang SC', sans-serif; box-shadow: 0 24px 90px #22121f38; }
+#companionDialog button, #companionDialog input { font-family: inherit; }
+#companionDialog h2 { font-size: 21px; font-weight: 600; }
+#companionDialog header small, #companionTargetNote, #companionDialog footer, .companion-note, .companion-name p, .companion-growth p, .companion-progress p { color: #826675; }
+#companionDialog header { margin-bottom: 18px; }
+.pet-backpack { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; }
+.pet-bag-title { font-size: 12px; font-weight: 500; color: #826675; margin: 0 0 8px; }
+.pet-backpack .pet-image { width: 55px; height: 55px; margin: 0 auto 3px; }
+.pet-backpack button > span:not(.pet-image), .pet-backpack small { display: block; }
+.pet-backpack small { font-size: 10px; opacity: .8; }
+.pet-backpack button { min-height: 46px; padding: 7px; border: 1px solid #dfbacb; border-radius: 8px; background: #fffafb; color: #78546a; font-size: 12px; line-height: 1.6; white-space: normal; }
+.pet-backpack button[aria-pressed="true"] { background: #765a72; color: white; border-color: #765a72; }
+.pet-backpack button:disabled { color: #978991; background: #f3e9ee; border-color: transparent; cursor: not-allowed; }
+#petUnlock { text-align: center; color: #8c6478; font-size: 11px; margin: 10px 0 0; min-height: 18px; }
+.companion-portrait { height: 176px; align-items: center; }
+.pet-paw { position: absolute; right: 32px; bottom: 28px; font-size: 26px; opacity: .24; transform: rotate(20deg); filter: grayscale(1); }
+.companion-portrait .pet-image { width: 174px; height: 174px; }
+.pet-image { position: relative; display: block; overflow: hidden; flex-shrink: 0; }
+#companionLauncher .pet-image { width: 100%; height: 104px; }
+.pet-image img { display: block; width: 100%; height: 100%; object-fit: contain; }
+#companionLauncher em { font-style: normal; }
+#companionLauncher .pet-image img, #companionDialog .pet-image img { width: 100%; height: 100%; }
+#companionLauncher .pet-image img:not([data-pet="qi"]), #companionDialog .pet-image img:not([data-pet="qi"]) { position: absolute; width: 200%; height: 200%; max-width: none; object-fit: fill; left: 0; top: 0; }
+.pet-image img[data-pet="beagle"] { top: -100% !important; }
+.pet-image img[data-adult="true"]:not([data-pet="qi"]) { left: -100% !important; }
+.companion-name h3 { font-size: 22px; font-weight: 600; }
+.companion-name p { margin-bottom: 18px; }
+.companion-growth strong, .companion-food strong, #companionMessage { color: #a04e72; }
+.companion-food, #companionTargetForm { border-color: #e8cfd9; }
+#feedCompanion { background: #a44e75; color: #fff; min-height: 40px; }
+#feedCompanion:hover:not(:disabled) { background: #883e60; }
+#companionTarget { background: #fffafb; border-color: #dfbacb; }
+#companionTargetForm button { border-color: #dfbacb; }
+#companionDialog progress { appearance: none; border: 0; border-radius: 5px; background: #eddce4; overflow: hidden; }
+#companionDialog progress::-webkit-progress-bar { background: #eddce4; }
+#companionDialog progress::-webkit-progress-value { background: #cc819f; border-radius: 5px; }
+#companionDialog progress::-moz-progress-bar { background: #cc819f; }
+#companionVisible { accent-color: #a44e75; }
+#companionDialog button:focus-visible { outline: 2px solid #a44e75; outline-offset: 3px; }
+.companion-heart { color: #ae456f; font-weight: 600; right: 20%; z-index: 1; }
+@media (prefers-reduced-motion: no-preference) {
+  .companion-portrait .pet-image { animation: pet-breathe 4s ease-in-out infinite; transform-origin: bottom center; }
+  #companionDialog.is-fed .companion-portrait .pet-image, #companionLauncher.is-fed > .pet-image { animation: pet-happy 650ms ease-in-out 3; }
+  .is-fed .companion-heart { animation: pet-love 1.8s ease-out both; }
+}
+@keyframes pet-breathe { 50% { transform: translateY(-2px) scale(1.015); } }
+@keyframes pet-happy { 25% { transform: translateY(-8px) rotate(-4deg); } 70% { transform: rotate(4deg); } }
+@keyframes pet-love { from { opacity: 0; transform: translateY(12px); } 25%,70% { opacity: 1; } to { opacity: 0; transform: translateY(-22px); } }
+@media (max-width: 600px) { #companionDialog { padding: 20px; } #companionLauncher .pet-image { height: 74px; } }
+
+#restoreCompanion { display: flex; flex-direction: column; align-items: center; width: 88px; padding: 0; background: none; border: none; text-shadow: 0 1px 4px #33252a; font-family: 'Yuanti SC','Hiragino Maru Gothic ProN','PingFang SC',sans-serif; }
+#restoreCompanion:hover { background: none; transform: translateY(-2px); }
+#restoreCompanion img { width: 64px; height: 70px; object-fit: contain; filter: drop-shadow(0 4px 5px #0003); }
+#restoreCompanion span { font-size: 13px; font-weight: 600; color: white; }
+#companionLauncher { left: 28px; }
+.app[data-view="focus"] #companionLauncher { right: 22px; }
+.pet-tabs { display: flex; gap: 22px; border-bottom: 1px solid #e8cfd9; margin-bottom: 16px; }
+.pet-tabs button { border: 0; border-bottom: 2px solid transparent; background: none; color: #8c7181; padding: 8px 0 11px; font-size: 14px; }
+.pet-tabs button[aria-pressed="true"] { color: #864464; border-bottom-color: #a44e75; }
+#petDetail[hidden] { display: none; }
+.pet-backpack { grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); }
+.pet-backpack:empty { display: none; }
+.pet-backpack .pet-image { width: 64px; height: 64px; }
+.pet-profile { display: grid; grid-template-columns: 1.3fr 1fr 1fr; border-block: 1px solid #e8cfd9; padding: 14px 0; margin: 18px 0 0; gap: 8px; }
+.pet-profile dt { font-size: 11px; color: #947281; margin-bottom: 7px; }
+.pet-profile dd { margin: 0; font-size: 13px; font-weight: 600; }
+#petTakeOut { display: block; width: 100%; padding: 11px 16px; border: 0; border-radius: 8px; background: #a44e75; color: white; font-size: 14px; margin: 0 0 20px; }
+#petPutAway { border: 0; background: none; color: #81566b; padding: 0; font-size: 12px; text-decoration: underline; text-underline-offset: 4px; }
+#petPutAway:disabled { opacity: .4; cursor: default; }
+@media (max-width: 600px) { #restoreCompanion { width: 66px; } #restoreCompanion img { width: 48px; height: 52px; } #restoreCompanion span { font-size: 11px; } #companionLauncher { left: 12px; } .app[data-view="focus"] #companionLauncher { right: 10px; } }
+
+/* Soft blue canvas with yellow pocket accents echoes the plush backpack. */
+#companionDialog { background: #f7fafc; color: #405361; border-color: #d4e2ea; }
+#companionDialog header small, #companionDialog footer, .companion-note, .companion-name p, .companion-growth p, .companion-progress p, .pet-profile dt { color: #6b7e8a; }
+.pet-tabs, .pet-profile, .companion-food { border-color: #dbe5ec; }
+.pet-tabs button { color: #71848f; }
+.pet-tabs button[aria-pressed="true"] { color: #386985; border-bottom-color: #6da5c4; }
+.pet-backpack button { background: #fff; border-color: #d8e4ec; color: #506978; padding: 12px; }
+.pet-backpack button[aria-pressed="true"] { background: #e2f0fa; border-color: #8bbbd4; color: #315b74; }
+.pet-backpack button:disabled { background: #edf0f2; border-color: #e4e8eb; color: #8a9299; }
+#petUnlock { color: #75858f; line-height: 1.7; }
+#petTakeOut { background: #426e86; color: #fff; }
+#petTakeOut:hover { background: #345c73; }
+#feedCompanion { background: #f1d782; color: #5c4d26; }
+#feedCompanion:hover:not(:disabled) { background: #e9ca67; }
+.companion-growth strong, .companion-food strong, #companionMessage, #petPutAway { color: #436e87; }
+#companionDialog progress, #companionDialog progress::-webkit-progress-bar { background: #e4ecf1; }
+#companionDialog progress::-webkit-progress-value { background: #83b6d1; }
+#companionDialog progress::-moz-progress-bar { background: #83b6d1; }
+#companionDialog button:focus-visible { outline-color: #528ead; }
+.companion-heart { color: #b47768; }
+#restoreCompanion img { width: 76px; height: 72px; }
+@media (max-width: 600px) { #restoreCompanion img { width: 58px; height: 54px; } }
