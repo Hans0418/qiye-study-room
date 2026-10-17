@@ -1,6 +1,7 @@
 (() => {
   const dialog = document.querySelector('#taskInbox'), $ = s => dialog.querySelector(s);
   const status = $('#inboxStatus'), dayKey = QiyeTasks.dateKey;
+  const taskEditors = new Map();
   let date = dayKey(), month = date.slice(0, 7), drafts = [], chosen = new Set(), undoId, undoDeadline = 0, undoTimer, importController, importTimer, composing = false;
   const message = e => { status.textContent = e.message || '暂时无法保存，请保留原文后重试。'; };
   const node = (tag, text = '', cls = '') => { const e = document.createElement(tag); e.textContent = text; e.className = cls; return e; };
@@ -23,9 +24,16 @@
     timeLabel.append(minutes); dateLabel.append(scheduled); fields.append(timeLabel, dateLabel);
     const titleLabel = node('label', '事项名称', 'agenda-field-label'); titleLabel.append(title);
     const notesLabel = node('label', '任务详情', 'agenda-field-label'); notesLabel.append(notes);
+    const readChange = () => {
+      if (!title.value.trim() || !minutes.reportValidity() || !QiyeTasks.validDate(scheduled.value)) {
+        details.open = true;
+        throw new Error('请检查事项名称、日期与时长');
+      }
+      return { text: title.value.trim(), notes: notes.value, minutes: minutes.value ? Number(minutes.value) : null, date: scheduled.value };
+    };
+    if (task.id) taskEditors.set(task.id, readChange);
     details.append(titleLabel, notesLabel, fields, button('保存修改', () => {
-      if (!title.value.trim() || !minutes.reportValidity() || !QiyeTasks.validDate(scheduled.value)) { status.textContent = '请检查事项名称、日期与时长'; return; }
-      try { save({ text: title.value.trim(), notes: notes.value, minutes: minutes.value ? Number(minutes.value) : null, date: scheduled.value }); details.open = false; } catch (e) { message(e); }
+      try { save(readChange()); details.open = false; } catch (e) { message(e); }
     }));
     if (task.original) { const original = node('details'); original.append(node('summary', '查看原始计划'), node('pre', task.original)); details.append(original); }
     return details;
@@ -58,7 +66,7 @@
   }
   function render() {
     try {
-      calendar(); $('#inboxList').replaceChildren(); $('#taskDayTitle').textContent = date === dayKey() ? '今日事项' : `${date.slice(5).replace('-', '月')}日事项`;
+      calendar(); taskEditors.clear(); $('#inboxList').replaceChildren(); $('#taskDayTitle').textContent = date === dayKey() ? '今日事项' : `${date.slice(5).replace('-', '月')}日事项`;
       const tasks = dated();
       for (const task of tasks) {
         const row = node('article', '', 'agenda-item'), select = field('input', `选择：${task.text}`, ''); select.type = 'checkbox'; select.checked = chosen.has(task.id); select.hidden = date !== dayKey();
@@ -125,9 +133,21 @@
   }
   document.querySelector('#openTaskInbox').onclick = () => open(); document.querySelector('#selectedTaskNotice').onclick = () => open(); document.querySelector('#pasteExistingPlan').onclick = () => open(true);
   $('#closeTaskInbox').onclick = () => dialog.close(); $('#browseInbox').onclick = () => { mode(false); render(); }; $('#pasteInbox').onclick = () => { $('#importTaskDate').value = date; mode(true); };
-  $('#selectAllTasks').onclick = () => { const tasks = dated().filter(t => !t.done); chosen = chosen.size === tasks.length ? new Set() : new Set(tasks.map(t => t.id)); render(); };
+  $('#selectAllTasks').onclick = () => {
+    const tasks = dated().filter(t => !t.done);
+    chosen = chosen.size === tasks.length ? new Set() : new Set(tasks.map(t => t.id));
+    for (const checkbox of $('#inboxList').querySelectorAll('input[type="checkbox"]')) checkbox.checked = chosen.size > 0;
+    selection();
+  };
   $('#selectAllDrafts').onclick = () => { const keep = !drafts.every(t => t.keep); drafts.forEach(t => { t.keep = keep; }); renderDrafts(); };
-  $('#chooseInboxTasks').onclick = () => start(dated().filter(t => chosen.has(t.id))).catch(message);
+  async function startSelectedTasks() {
+    const tasks = dated().filter(t => chosen.has(t.id));
+    const changes = tasks.map(task => taskEditors.get(task.id)?.() || task);
+    if (changes.some(change => change.date !== dayKey())) throw new Error('立即开始仅支持今天的事项，请调整日期或先保存修改。');
+    tasks.forEach((task, index) => update(task, changes[index]));
+    return start(tasks);
+  }
+  $('#chooseInboxTasks').onclick = () => startSelectedTasks().catch(message);
   async function organizeInput() {
     if (importController || composing) return;
     const source = $('#taskPaste').value.trim(); if (!source) { status.textContent = '请先输入想做的事情'; return; }

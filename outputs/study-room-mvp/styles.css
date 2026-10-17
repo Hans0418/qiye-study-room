@@ -1933,7 +1933,8 @@ input[type="range"] {
 .session-task-row:has(input[type="checkbox"]:checked) textarea { text-decoration: line-through; opacity: .5; }
 .session-task-options { grid-column: 2; display: flex; align-items: center; gap: 8px; }
 #sessionTodoList .session-task-options label { display: flex; align-items: center; margin-right: auto; padding: 0; font-size: 12px; gap: 4px; }
-#sessionTodoList input[type="number"] { width: 48px; margin: 0; padding: 5px; border: 1px solid #ffffff25; border-radius: 4px; background: #ffffff08; color: var(--ink); }
+#sessionTodoList input[type="number"] { box-sizing: border-box; width: 76px; min-width: 76px; min-height: 34px; margin: 0; padding: 6px 8px; font: inherit; font-size: 14px; line-height: 1.4; border: 1px solid #ffffff25; border-radius: 4px; background: #ffffff08; color: var(--ink); }
+#sessionTodoList input[type="number"]::placeholder { font-size: 12px; color: #aebbb5; opacity: 1; }
 .session-task-options .todo-remove { background: transparent; color: #d2d8d3; font-size: 20px; width: 28px; padding: 0; }
 .todo-composer { display: grid; grid-template-columns: minmax(0, 1fr) auto 30px; align-items: center; gap: 8px; padding-bottom: 12px; border-bottom: 1px solid #ffffff20; }
 .todo-composer > input { grid-row: 1; grid-column: 1; }
