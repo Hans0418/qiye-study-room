@@ -16,13 +16,13 @@
   function editor(task, save) {
     const details = node('details', '', 'agenda-editor'); details.append(node('summary', '详情与编辑'));
     const title = field('input', '事项名称', task.text); title.type = 'text'; title.maxLength = 300; title.placeholder = '例如：完成危机传播作业';
-    const notes = field('textarea', '具体步骤与备注', task.notes); notes.rows = 4; notes.maxLength = 20000; notes.placeholder = '例如：查找案例、整理大纲、完成第一部分';
+    const notes = field('textarea', '任务详情', task.notes); notes.rows = 4; notes.maxLength = 20000; notes.placeholder = '例如：查找案例、整理大纲、完成第一部分';
     const minutes = field('input', '预计分钟数', task.minutes); minutes.type = 'number'; minutes.min = '1'; minutes.max = '180'; minutes.placeholder = '可选';
     const scheduled = field('input', '事项日期', task.date || $('#importTaskDate').value || date); scheduled.type = 'date';
     const fields = node('div', '', 'agenda-toolbar'), timeLabel = node('label', '预计分钟 '), dateLabel = node('label', '日期 ');
     timeLabel.append(minutes); dateLabel.append(scheduled); fields.append(timeLabel, dateLabel);
     const titleLabel = node('label', '事项名称', 'agenda-field-label'); titleLabel.append(title);
-    const notesLabel = node('label', '具体步骤与备注', 'agenda-field-label'); notesLabel.append(notes);
+    const notesLabel = node('label', '任务详情', 'agenda-field-label'); notesLabel.append(notes);
     details.append(titleLabel, notesLabel, fields, button('保存修改', () => {
       if (!title.value.trim() || !minutes.reportValidity() || !QiyeTasks.validDate(scheduled.value)) { status.textContent = '请检查事项名称、日期与时长'; return; }
       try { save({ text: title.value.trim(), notes: notes.value, minutes: minutes.value ? Number(minutes.value) : null, date: scheduled.value }); details.open = false; } catch (e) { message(e); }
@@ -87,7 +87,11 @@
   async function start(tasks) {
     if (!tasks.length || tasks.some(t => t.date !== dayKey())) return false;
     if (state.view !== 'focus' && !await window.inookAccount.requireLogin()) return false;
-    for (const task of tasks) if (!sessionTasks.some(t => t.id === task.id || t.text === task.text)) sessionTasks.push({ ...task });
+    for (const task of tasks) {
+      const existing = sessionTasks.find(t => t.id === task.id);
+      if (existing) Object.assign(existing, task);
+      else sessionTasks.push({ ...task });
+    }
     if (!persistSessionTasks()) return false;
     renderSessionTasks(); dialog.close();
     if (state.view !== 'focus') {
