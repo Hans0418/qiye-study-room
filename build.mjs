@@ -7,7 +7,8 @@ const assets = [
   'snow-study-window-v2.png', 'sea-sharp-v2.png', 'sea-study.png',
   'rain-library.png', 'forest-natural-v3.png', 'wild-clean-v3.png',
   'avatar-crayon-atlas.png', 'study-companion.png',
-  'study-companion-adult.png', 'sheep-walk.png', 'qiye-ocean-brand.png'
+  'study-companion-adult.png', 'sheep-walk.png', 'qiye-ocean-brand.png',
+  'pet-family.png', 'pet-backpack-soft.png', 'diary-paper-pen.png'
 ];
 // Fail on missing media instead of publishing a visually broken demo.
 for (const name of assets) await access(new URL(`assets/${name}`, source));

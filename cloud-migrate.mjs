@@ -17,6 +17,7 @@ if (!process.argv.includes('--apply')) {
     const sql = await readFile(new URL('./supabase/migrations/202610130001_qiye_private.sql', import.meta.url), 'utf8');
     // Keep the whole migration and any rollback on the same connection.
     await client.query(sql);
+    await client.query(await readFile(new URL('./supabase/migrations/004_personal_records.sql', import.meta.url), 'utf8'));
     console.log('Private cloud schema migration completed.');
   } catch {
     try { await client?.query('ROLLBACK'); } catch {}

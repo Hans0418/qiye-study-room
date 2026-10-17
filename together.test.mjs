@@ -26,7 +26,7 @@ function harness(responses, credentials = {}) {
     setInterval(fn) { interval = fn; return 1; }, clearInterval() { interval = null; },
     setView(v) { view = v; }, endStudyAndReset() { context.ended = true; }, scenes: [{ id: 'snow', name: '雪山' }],
     renderScenes() {}, updateBackdrop() {}, applySceneSound() {}, setDuration() {}, enterFocus() {}, renderTimer() {}, renderGoalClock() {},
-    goalClock: { remaining: null, deadline: null, tick() { return this.remaining; } },
+    goalClock: { remaining: null, deadline: null, tick() { return this.remaining; }, clear() { this.remaining = null; this.deadline = null; } },
     state: { minutes: 50 }, goalInput: element('goalInput'), selectedScene: () => ({ id: 'snow' }), setupGoalInput: { value: '学习' },
     fetch: async (url, options) => {
       calls.push({ url, options });
@@ -39,6 +39,36 @@ function harness(responses, credentials = {}) {
   return { element, location, storage, calls, context, get view() { return view; }, get interval() { return interval; } };
 }
 const settle = () => new Promise(resolve => setImmediate(resolve));
+test('goal edits require a scope confirmation before private or shared writes', async () => {
+  for (const share of [false, true]) {
+    const now = Date.now();
+    const base = { startedAt: now, serverNow: now, minutes: 50, goal: 'Original', name: 'Host', scene: 'snow', members: [], tasks: [] };
+    const h = harness([{ status: 200, data: base }, { status: 200, data: {} }], { memberToken: 'guest' });
+    await settle();
+    assert.equal(h.element('button').textContent, '改用自己的目标');
+    h.element('button').onclick();
+    h.element('textarea').value = 'My new goal';
+    await h.element('#saveSharedMode').onclick();
+    assert.equal(h.calls.length, 1);
+    assert.equal(h.context.state.goal, 'Original');
+    assert.equal(h.element('h2').textContent, '同步这个目标？');
+    await h.element(share ? '#shareEditedGoal' : '#saveSharedMode').onclick();
+    assert.equal(h.calls[1].url, `/api/rooms/${roomId}/${share ? 'share-goal' : 'goal-mode'}`);
+    assert.equal(h.context.state.goal, 'My new goal');
+    assert.equal(h.context.window.together.sharedTiming() === undefined, !share);
+  }
+});
+test('host accepts a remotely shared goal without retaining its old goal timer', async () => {
+  const now = Date.now();
+  const base = { startedAt: now, serverNow: now, minutes: 50, goal: 'Original', name: 'Host', scene: 'snow', members: [], tasks: [] };
+  const h = harness([{ status: 200, data: base }, { status: 200, data: {} }, { status: 200, data: { ...base, goal: 'Member goal' } }], { hostToken: 'host' });
+  await settle();
+  h.context.goalClock.remaining = 60000;
+  await h.interval();
+  assert.equal(h.context.state.goal, 'Member goal');
+  assert.equal(h.context.goalClock.remaining, null);
+  assert.equal(JSON.parse(h.calls[1].options.body).updateGoal, false);
+});
 test('ending a room closes it for hosts, while guests only leave; both clear local state', async () => {
   for (const credentials of [{ hostToken: 'host' }, { memberToken: 'guest' }]) {
     const base = { name: 'Host', scene: 'snow', minutes: 50, members: [] };
@@ -125,7 +155,7 @@ test('following a late host goal does not reset session time; personal mode stay
     await h.interval();
     assert.equal(h.context.state.goal, goalMode === 'follow' ? 'New goal' : 'My goal');
     assert.equal(h.context.state.remaining, remaining);
-    assert.equal(h.context.goalInput.readOnly, goalMode === 'follow');
+    assert.equal(h.context.goalInput.readOnly, true);
   }
 });
 test('host does not publish input-method composition; publishes committed text and goal timer', async () => {
@@ -157,7 +187,7 @@ test('follower receives running and paused goal timer without changing personal 
   assert.equal(h.context.state.remaining, remaining);
   assert.equal(h.context.goalClock.remaining, null);
 });
-test('shared checklist updates preserve personal completion by task ID and stay separate from personal mode', async () => {
+test('shared checklist preserves personal completion and remains visible in personal goal mode', async () => {
   const now = Date.now();
   const task = { id: 'step-1', text: 'Read', minutes: 15 };
   const base = { startedAt: now, serverNow: now, minutes: 50, goal: 'Read', name: 'Host', scene: 'snow', members: [], allowOwn: true, tasks: [task] };
@@ -171,5 +201,52 @@ test('shared checklist updates preserve personal completion by task ID and stay 
   assert.equal(h.calls.some(c => c.options.method === 'POST'), false);
   const personal = harness([{ status: 200, data: base }], { memberToken: 'guest', goalMode: 'own', goal: 'My goal' });
   await settle();
-  assert.equal(personal.context.window.together.sharedTasks(), undefined);
+  assert.equal(personal.context.window.together.sharedTasks()[0].text, 'Read');
+  assert.equal(personal.context.state.goal, 'My goal');
+});
+
+test('guest confirms sharing or keeps a task private without a server write', async () => {
+  const now = Date.now();
+  const base = { startedAt: now, serverNow: now, minutes: 50, goal: 'Read', name: 'Host', scene: 'snow', members: [], tasks: [] };
+  const task = { id: 'new-task', text: 'Write notes', minutes: 10 };
+  const h = harness([{ status: 200, data: base }, { status: 200, data: {} }, { status: 200, data: { ...base, tasks: [task] } }], { memberToken: 'guest' });
+  await settle();
+  let choice = h.context.window.together.confirmTask(task);
+  h.element('#keepTaskPrivate').onclick();
+  assert.equal(await choice, true);
+  assert.equal(h.calls.length, 1);
+  choice = h.context.window.together.confirmTask(task);
+  await h.element('#shareTask').onclick();
+  assert.equal(await choice, false);
+  assert.equal(h.calls[1].url, `/api/rooms/${roomId}/tasks`);
+  assert.equal(h.context.window.together.sharedTasks()[0].id, task.id);
+});
+
+test('host receives member additions and includes them in subsequent shared snapshots', async () => {
+  const now = Date.now();
+  const base = { startedAt: now, serverNow: now, minutes: 50, goal: '', name: 'Host', scene: 'snow', members: [], tasks: [] };
+  const task = { id: 'member-task', text: 'Discuss notes', minutes: 10 };
+  const h = harness([{ status: 200, data: base }, { status: 200, data: {} }, { status: 200, data: { ...base, tasks: [task] } }, { status: 200, data: {} }, { status: 200, data: { ...base, tasks: [task] } }], { hostToken: 'host' });
+  await settle();
+  await h.interval();
+  assert.equal(h.context.sessionTasks[0].id, task.id);
+  await h.interval();
+  const lastWrite = h.calls.filter(c => c.options.method === 'POST').at(-1);
+  const payload = JSON.parse(lastWrite.options.body);
+  assert.equal(payload.tasks[0].id, task.id);
+  assert.deepEqual(payload.baseTaskIds, [task.id]);
+});
+
+test('failed sharing retains the dialog for retry; cancellation does not add a task', async () => {
+  const now = Date.now();
+  const base = { startedAt: now, serverNow: now, minutes: 50, name: 'Host', scene: 'snow', members: [], tasks: [] };
+  const h = harness([{ status: 200, data: base }, new Error('offline')], { memberToken: 'guest' });
+  await settle();
+  const choice = h.context.window.together.confirmTask({ id: 'task', text: 'Read', minutes: 10 });
+  await h.element('#shareTask').onclick();
+  assert.equal(h.element('#shareTask').disabled, false);
+  assert.match(h.element('[role="status"]').textContent, /重试/);
+  h.element('dialog').onclose();
+  assert.equal(await choice, false);
+  assert.equal(h.context.sessionTasks.length, 0);
 });
