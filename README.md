@@ -21,7 +21,7 @@ Core flow: **Describe a goal → Generate an AI plan → Review and adjust → W
 
 ## Product Walkthrough
 
-Updated October 17, 2026 with 13 screenshots supplied by the project author. This first batch covers setup, focused work, AI planning, and the task inbox. Further feature screenshots will be added separately.
+Updated October 17, 2026 with 24 screenshots supplied by the project author. The walkthrough covers setup, focused work, AI planning, the task inbox, companion growth, daily check-ins, journaling, and accounts.
 
 ### 1. Start Fresh or Keep Your Plan
 
@@ -109,6 +109,68 @@ Choose a calendar date to create tasks in advance. Edit task details, optional e
 On a day with unfinished scheduled tasks, in-app reminders help bring them back into focus. The home reminder's start action goes through scene selection and carries the selected tasks into the session. A first-entry learning-page reminder offers access to today's inbox, where users can select tasks and start with them.
 
 The learning-page reminder is marked as seen as soon as it appears, so refreshing without clicking does not show it again that day. Reminders are in-app, not background notifications or scheduled emails.
+
+### 7. Grow a Study Companion
+
+Earn pet food by reaching daily focused-study milestones. Feed your companion to increase its growth value and eventually advance its growth stage. The pet profile shows days together, growth progress, stored food, and today's study progress. Food does not expire.
+
+<details>
+<summary>View the pet backpack, feeding progress, and adoption options</summary>
+
+<img src="docs/screenshots/pet-backpack.png" alt="Pet backpack and current companion" width="640">
+
+<img src="docs/screenshots/pet-growth.png" alt="Companion profile, feeding, growth, and daily food milestones" width="540">
+
+<img src="docs/screenshots/pet-adoption.png" alt="Additional companions and adoption-slot unlock progress" width="640">
+
+</details>
+
+### 8. Check In Each Day
+
+The focus calendar supports daily check-ins and shows the current streak, total check-ins, and this month's count. After checking in, an encouragement dialog offers a route back to studying or the calendar. From a learning scene, it preserves the current scene; from home, it opens session setup.
+
+The current encouragement is a fixed message, not a personalized daily AI-generated quote or a push notification.
+
+<details>
+<summary>View the focus calendar and check-in encouragement</summary>
+
+<img src="docs/screenshots/daily-checkin.png" alt="Daily check-in calendar and study statistics" width="640">
+
+<img src="docs/screenshots/checkin-encouragement.png" alt="Encouragement after checking in with options to study or stay in the calendar" width="640">
+
+</details>
+
+### 9. Write and Revisit a Diary
+
+Open the diary from the study environment, choose a date, and record the day's thoughts. Save the entry and revisit previous entries through a calendar, with a preview and a link to reopen the selected day.
+
+![Diary entry point in the rainy library](docs/screenshots/diary-scene.png)
+
+<details>
+<summary>View the diary editor and past entries</summary>
+
+<img src="docs/screenshots/diary-editor.png" alt="Date-based diary editor with a word count and save action" width="640">
+
+<img src="docs/screenshots/diary-history.png" alt="Calendar of past diary entries and selected-day preview" width="640">
+
+</details>
+
+### 10. Register, Sign In, and Choose an Avatar
+
+Register with a nickname and an email or phone identifier, then sign in with a password. Users can choose to stay signed in for seven days, browse without signing in, and select a preset avatar or upload their own image. Cloud AI planning requires sign-in.
+
+The demo does not verify email or phone ownership and does not provide password recovery. Use test credentials rather than a password used elsewhere.
+
+<details>
+<summary>View sign-in, registration, and avatar selection</summary>
+
+<img src="docs/screenshots/account-login.png" alt="Email or phone sign-in form" width="440">
+
+<img src="docs/screenshots/account-register.png" alt="Registration form with demo-account limitations" width="440">
+
+<img src="docs/screenshots/account-avatar.png" alt="Preset avatar selection and custom image upload" width="440">
+
+</details>
 
 ## AI Workflow
 
