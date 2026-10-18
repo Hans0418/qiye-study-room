@@ -1,14 +1,24 @@
 # Qiye
 
-An AI-powered study room that turns vague goals and existing plans into actionable, editable tasks, then connects those tasks to focused work.
+An online study room for solo and shared learning, designed to reduce preparation effort, create a focused atmosphere, and support sustained work. AI task planning helps when a goal is unclear or a plan needs organizing; it is an optional aid within the study experience, not a prerequisite for starting.
 
 **[Try the live demo](https://qiye-study-room.vercel.app)**
 
-**Describe or paste a plan → Review AI suggestions → Adjust tasks and time → Start focused work**
+**Enter → Choose a scene → Set sound, time, and a goal → Study → Organize and complete tasks**
 
-Qiye is built around the moment before studying: knowing what you want to achieve, but not knowing where to start. Its core is a user-controlled AI planning workflow, supported by timers, a task inbox, and an immersive study environment.
+For exam preparation, assignments, and independent learning, Qiye brings the environment, Pomodoro timer, task list, and planning assistant into one place. Users can work directly, build their own list, or ask AI to help turn their intentions into executable steps.
 
 > Portfolio MVP. Cloud AI requires sign-in and is limited to 3 requests per account and 20 across the site each day. Documentation is in English; the 24 author-supplied screenshots show the current Chinese-language interface.
+
+## Product Walkthrough
+
+The following follows the actual solo-study journey. AI planning is highlighted where it helps users prepare or organize their work, without interrupting the sequence of entering and using the room.
+
+### 1. Enter the Study Room
+
+Enter from the home screen, then choose the surroundings that help you concentrate.
+
+![Qiye home screen](docs/screenshots/home.png)
 
 <details>
 <summary>Before You Start: Register, Sign In, and Choose an Avatar</summary>
@@ -27,9 +37,45 @@ The demo does not verify email or phone ownership and does not provide password 
 
 </details>
 
-## AI Planning to Focused Execution
+Returning users can start fresh or keep their previous goal and to-do list. The timer and assistant conversation restart for the new session.
 
-### 1. Turn a Vague Goal into Concrete Steps
+![Start fresh or preserve the previous goal and todos](docs/screenshots/resume-session.png)
+
+### 2. Choose a Scene
+
+Choose from six environments: a snowy study, seaside study, morning window, rainy library, forest study, or open countryside.
+
+![Choose a study environment](docs/screenshots/scene-selection.png)
+
+### 3. Set the Sound Atmosphere
+
+Control music and ambient volume separately. Preview and mix rain, wind, waves, streams, leaves, fan noise, white noise, and brown noise.
+
+![Music and environmental sound settings](docs/screenshots/sound-settings.png)
+
+### 4. Set Your Time and Goal
+
+Choose a session duration and an optional goal. The setup page also offers AI planning for the selected time, so users can prepare a plan before entering the learning scene.
+
+![Session duration and goal with an AI planning entry point](docs/screenshots/session-setup.png)
+
+### 5. Enter the Learning Scene
+
+The learning scene keeps the goal and timer visible. Pause, use focus mode, or open the to-do list without leaving the scene.
+
+![Rainy library focus screen](docs/screenshots/focus.png)
+
+### 6. Organize What to Work On
+
+Start with the simplest option: add tasks manually, set durations, and choose which task to work on. Task details expand from the list and current goal when available; longer task text wraps.
+
+![Manually create a task and set its duration](docs/screenshots/manual-todos.png)
+
+#### Optional AI Help for Planning
+
+There are two ways to bring AI into this workflow: describe a vague goal to the assistant, or paste a plan you already have. Both lead back to an editable task list and require user confirmation. The setup-page planning entry point provides another way to prepare tasks before studying.
+
+#### AI Option A: Break Down a Vague Goal
 
 Open the planning assistant and describe what you are trying to do. It proposes a task breakdown, can ask for more context, and supports follow-up adjustments before you commit to a plan.
 
@@ -39,7 +85,7 @@ Review the proposed steps, edit task text and estimated durations, and ask for a
 
 <img src="docs/screenshots/ai-plan.png" alt="Review, edit, and refine an AI-generated task breakdown" width="560">
 
-### 2. Turn an Existing Plan into Structured Tasks
+#### AI Option B: Organize an Existing Plan
 
 Already have an assignment outline or study plan? Open **Organize an Existing Plan** from the to-do list, or **Paste an Existing Plan** in the task inbox. Paste the text and explicitly request AI recognition.
 
@@ -51,55 +97,13 @@ Review the extracted titles and task details, choose dates, and adjust optional 
 
 Duration suggestions depend on the plan and available context and may be left blank. They are editable estimates, not guaranteed completion times or a learned personal productivity model.
 
-### 3. Take the Confirmed Plan into Focused Work
+#### Review, Confirm, and Work Through the Plan
 
 Choose **Start with This Plan** to bring the confirmed steps into the study to-do list. Select a task, track its countdown alongside the Pomodoro timer, and work through the plan without switching tools.
 
 ![Confirmed AI plan in the learning scene with timed tasks](docs/screenshots/task-execution.png)
 
-### How the AI Workflow Works
-
-Local mode uses Ollama; cloud mode uses a fixed Doubao model through a server-side API. The model generates a structured plan; the application validates fields and steps and uses a deterministic time-allocation tool to constrain the total duration. It supports clarification when context is insufficient. User confirmation is required before execution. Cloud AI requires sign-in and has shared daily request limits. Provider-side free-quota auto-pause must remain enabled; application request limits are not billing caps.
-
-This is a controlled planning workflow, not a general-purpose autonomous agent with unrestricted actions. It currently has no knowledge-base retrieval or web search capabilities, and improved learning efficiency has not been validated.
-
-See [Agent Design](AGENT-DESIGN.md) for the detailed design. The core implementation is in `focus-agent.mjs`.
-
-## The Study Session
-
-### Set Up Your Environment
-
-Enter from the home screen, then choose the surroundings that help you concentrate.
-
-![Qiye home screen](docs/screenshots/home.png)
-
-Returning users can start fresh or keep their previous goal and to-do list. The timer and assistant conversation restart for the new session.
-
-![Start fresh or preserve the previous goal and todos](docs/screenshots/resume-session.png)
-
-Choose from six environments: a snowy study, seaside study, morning window, rainy library, forest study, or open countryside.
-
-![Choose a study environment](docs/screenshots/scene-selection.png)
-
-Control music and ambient volume separately. Preview and mix rain, wind, waves, streams, leaves, fan noise, white noise, and brown noise.
-
-![Music and environmental sound settings](docs/screenshots/sound-settings.png)
-
-Choose a session duration and an optional goal. The setup page also offers AI planning for the selected time, so users can prepare a plan before entering the learning scene.
-
-![Session duration and goal with an AI planning entry point](docs/screenshots/session-setup.png)
-
-### Work with or without AI
-
-The learning scene keeps the goal and timer visible. Pause, use focus mode, or open the to-do list without leaving the scene.
-
-![Rainy library focus screen](docs/screenshots/focus.png)
-
-Users can also add tasks manually, set durations, and choose which task to work on. Task details expand from the list and current goal when available; longer task text wraps.
-
-![Manually create a task and set its duration](docs/screenshots/manual-todos.png)
-
-### Keep Future Plans in the Task Inbox
+### 7. Keep Future Plans in the Task Inbox
 
 Schedule tasks for future dates, edit their details and optional estimates, and review completed records separately.
 
@@ -108,6 +112,10 @@ Schedule tasks for future dates, edit their details and optional estimates, and 
 On a day with unfinished scheduled tasks, in-app reminders reconnect the plan to action. Starting from the home reminder goes through scene selection and carries the selected tasks into the session. A first-entry learning-page reminder offers access to today's inbox.
 
 The learning-page reminder is marked as seen when it appears, so refreshing does not show it again that day. These are in-app reminders, not background notifications or scheduled emails.
+
+### Study Together as an Alternative
+
+For shared learning, choose the home screen's **Study with Friends** entry point. Create a room, invite friends, and either follow the host's goal or keep a personal goal. Shared goals, task lists, and goal countdowns synchronize while allowing individual task arrangements.
 
 ## Supporting Daily Habits
 
@@ -151,8 +159,13 @@ Open the diary from the study environment, choose a date, and record the day's t
 
 <img src="docs/screenshots/diary-history.png" alt="Calendar of past diary entries and selected-day preview" width="640">
 
+## How the AI Workflow Works
 
+Local mode uses Ollama; cloud mode uses a fixed Doubao model through a server-side API. The model generates a structured plan; the application validates fields and steps and uses a deterministic time-allocation tool to constrain the total duration. It supports clarification when context is insufficient. User confirmation is required before execution. Cloud AI requires sign-in and has shared daily request limits. Provider-side free-quota auto-pause must remain enabled; application request limits are not billing caps.
 
+This is a controlled planning workflow, not a general-purpose autonomous agent with unrestricted actions. It currently has no knowledge-base retrieval or web search capabilities, and improved learning efficiency has not been validated.
+
+See [Agent Design](AGENT-DESIGN.md) for the detailed design. The core implementation is in `focus-agent.mjs`.
 
 ## Run Locally
 
