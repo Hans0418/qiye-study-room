@@ -21,72 +21,94 @@ Core flow: **Describe a goal → Generate an AI plan → Review and adjust → W
 
 ## Product Walkthrough
 
-### Set Up Your Environment and Goal
+Updated October 17, 2026 with 13 screenshots supplied by the project author. This first batch covers setup, focused work, AI planning, and the task inbox. Further feature screenshots will be added separately.
 
-Choose a study scene, customize background music and ambient sounds, and set a session duration and goal. Start directly or ask AI to plan the session first.
+### 1. Start Fresh or Keep Your Plan
 
-![Choose from six study environments](docs/screenshots/scene-selection.png)
+Enter from the home screen. When a previous goal and to-do list are available, choose a fresh start or keep them for the next session. The session timer and assistant conversation restart.
 
 <details>
-<summary>View sound settings, session duration, and the AI planning entry point</summary>
+<summary>View the resume choice</summary>
 
-**Sound settings**: Adjust music and ambient volume separately, combine environmental sounds, and control individual sound levels.
-
-![Background music and ambient sound mixer](docs/screenshots/sound-settings.png)
-
-**Session setup and AI planning**: Select a duration and optionally enter a goal. Users can start studying directly or select "Plan these 50 minutes" to turn the goal into an AI-generated plan. The planning entry point reflects the selected session duration. Review and adjust the plan before starting.
-
-![Session duration, goal input, and the option to plan the session with AI](docs/screenshots/session-setup.png)
+![Start fresh or preserve the previous goal and todos](docs/screenshots/resume-session.png)
 
 </details>
 
-### Turn a Broad Goal into an Actionable Plan
+### 2. Choose a Scene, Sound, Time, and Goal
 
-Describe a task in natural language and receive suggested steps. Edit the content and estimated durations, then choose "Start with this plan."
+Choose from six study environments, including the snowy study, seaside study, morning window, rainy library, forest study, and open countryside.
 
-<img src="docs/screenshots/ai-input.png" alt="Describe a learning goal in natural language" width="640">
-
-<table>
-  <tr><th>Task breakdown and plan review</th><th>Additional steps and adjustments</th></tr>
-  <tr>
-    <td width="50%"><img src="docs/screenshots/ai-plan.png" alt="AI-generated tasks for user review"></td>
-    <td width="50%"><img src="docs/screenshots/ai-plan-more.png" alt="Additional plan steps and the adjustment input"></td>
-  </tr>
-</table>
-
-### Move from Planning to Focused Work
-
-The confirmed plan becomes a to-do list. Reorder tasks, select the current task, and track both the goal countdown and the Pomodoro timer.
-
-![To-do list, current goal, and countdown timers](docs/screenshots/task-execution.png)
+![Choose a study environment](docs/screenshots/scene-selection.png)
 
 <details>
-<summary>View the rainy library focus screen</summary>
+<summary>View music, ambient mixing, session time, and goal planning</summary>
 
-![Rainy library study scene with a Pomodoro timer](docs/screenshots/focus.png)
+Control background music and ambient volume separately. Mix rain, wind, waves, streams, leaves, fan noise, white noise, and brown noise, with individual volume controls and a preview.
+
+![Music and environmental sound settings](docs/screenshots/sound-settings.png)
+
+Choose a session duration and optionally describe what to work on. Start directly or use the AI planning entry point to turn the goal into a proposed plan for the selected time.
+
+![Session time and goal with AI planning](docs/screenshots/session-setup.png)
 
 </details>
 
-### Study Together
+### 3. Focus and Build Your Own To-Do List
 
-Create a room and invite friends. Members can follow the host's goal or keep their own goals.
+The learning scene keeps the current goal and Pomodoro timer visible. Pause the session, use focus mode, or open the to-do list without leaving the scene.
 
-![Shared study room members and goal modes](docs/screenshots/room-members.png)
+![Rainy library focus screen](docs/screenshots/focus.png)
+
+Add tasks manually, set their durations, and choose which task to work on. Task details can be expanded from the list and the current goal when available; longer task text wraps.
 
 <details>
-<summary>View invitations and room settings</summary>
+<summary>View manual task creation</summary>
 
-![Invite friends into the same study room](docs/screenshots/room-invite.png)
-
-The `127.0.0.1` address in this screenshot is a local demo address, not a public invitation link.
+![Add a task and set its duration](docs/screenshots/manual-todos.png)
 
 </details>
 
-### A Study Companion
+### 4. Paste an Existing Plan
 
-Track days spent together and earn food through focused study. Feeding increases the pet's growth value, providing lightweight feedback on study activity.
+Use "已有计划，整理成清单" or the inbox's "粘贴已有计划" tab. Paste an existing plan and explicitly request AI recognition. Review the recognized task titles, details, dates, and optional duration estimates before arranging them for a day or starting.
 
-<img src="docs/screenshots/companion.png" alt="Study companion: days together, feeding, and growth" width="420">
+AI can suggest task durations based on the plan and context; estimates remain editable and may be left blank. They are suggestions, not guaranteed completion times or a learned personal productivity model.
+
+<details>
+<summary>View plan input and editable recognition results</summary>
+
+<img src="docs/screenshots/plan-import.png" alt="Paste a course assignment plan for AI recognition" width="720">
+
+<img src="docs/screenshots/plan-review.png" alt="Review recognized task details, dates, and optional durations" width="640">
+
+</details>
+
+### 5. Ask the AI Assistant to Help You Get Started
+
+"帮我理一理" helps turn a vague need into concrete next steps. Describe the work, review the proposed breakdown, edit tasks and estimates, and ask for adjustments. Select "按计划开始" to bring the confirmed plan into the study to-do list.
+
+<details>
+<summary>View the assistant conversation and plan review</summary>
+
+<img src="docs/screenshots/ai-input.png" alt="Describe a vague assignment to the planning assistant" width="720">
+
+<img src="docs/screenshots/ai-plan.png" alt="Review and adjust the assistant's proposed tasks before starting" width="560">
+
+</details>
+
+The confirmed tasks appear in the study scene. Select a task, track its countdown, and work through the list alongside the session timer.
+
+![AI plan brought into the learning scene as timed todos](docs/screenshots/task-execution.png)
+
+### 6. Plan Ahead with the Task Inbox
+
+Choose a calendar date to create tasks in advance. Edit task details, optional estimated minutes, and dates; review completed records separately.
+
+<img src="docs/screenshots/task-inbox-calendar.png" alt="Schedule future tasks in the calendar-based task inbox" width="640">
+
+On a day with unfinished scheduled tasks, in-app reminders help bring them back into focus. The home reminder's start action goes through scene selection and carries the selected tasks into the session. A first-entry learning-page reminder offers access to today's inbox, where users can select tasks and start with them.
+
+The learning-page reminder is marked as seen as soon as it appears, so refreshing without clicking does not show it again that day. Reminders are in-app, not background notifications or scheduled emails.
 
 ## AI Workflow
 
@@ -142,7 +164,7 @@ node --test server.test.mjs auth.test.mjs rooms.test.mjs ai-errors.test.mjs focu
 ## Current Limitations
 
 - Local registration and sign-in are supported, but email or phone verification and password recovery are not. Use test identities; do not collect sensitive real-user information.
-- Study records are stored in the browser. They do not sync with accounts and are not isolated by account.
+- The task inbox is stored in the current browser and is not account-isolated or synced across devices. Signed-in diary and study-history backup are separate features; do not assume every browser-local record follows the account.
 - Local rooms are stored in server memory. Cloud rooms use Postgres with a 24-hour lifetime; mutations are serialized for this small demo, not optimized for high traffic.
 - Public login, shared-room APIs, permissions, logout, runtime images, and one real AI plan passed smoke testing on October 14, 2026. Earlier AI requests failed output validation; generation may need a manual retry. This is not a model-quality evaluation or a production-readiness claim.
 
