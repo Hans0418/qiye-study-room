@@ -27,12 +27,10 @@ Updated October 17, 2026 with 24 screenshots supplied by the project author. The
 
 Enter from the home screen. When a previous goal and to-do list are available, choose a fresh start or keep them for the next session. The session timer and assistant conversation restart.
 
-<details>
-<summary>View the resume choice</summary>
+**View the resume choice**
 
 ![Start fresh or preserve the previous goal and todos](docs/screenshots/resume-session.png)
 
-</details>
 
 ### 2. Choose a Scene, Sound, Time, and Goal
 
@@ -40,8 +38,7 @@ Choose from six study environments, including the snowy study, seaside study, mo
 
 ![Choose a study environment](docs/screenshots/scene-selection.png)
 
-<details>
-<summary>View music, ambient mixing, session time, and goal planning</summary>
+**View music, ambient mixing, session time, and goal planning**
 
 Control background music and ambient volume separately. Mix rain, wind, waves, streams, leaves, fan noise, white noise, and brown noise, with individual volume controls and a preview.
 
@@ -51,7 +48,6 @@ Choose a session duration and optionally describe what to work on. Start directl
 
 ![Session time and goal with AI planning](docs/screenshots/session-setup.png)
 
-</details>
 
 ### 3. Focus and Build Your Own To-Do List
 
@@ -61,12 +57,10 @@ The learning scene keeps the current goal and Pomodoro timer visible. Pause the 
 
 Add tasks manually, set their durations, and choose which task to work on. Task details can be expanded from the list and the current goal when available; longer task text wraps.
 
-<details>
-<summary>View manual task creation</summary>
+**View manual task creation**
 
 ![Add a task and set its duration](docs/screenshots/manual-todos.png)
 
-</details>
 
 ### 4. Paste an Existing Plan
 
@@ -74,27 +68,23 @@ Use "已有计划，整理成清单" or the inbox's "粘贴已有计划" tab. Pa
 
 AI can suggest task durations based on the plan and context; estimates remain editable and may be left blank. They are suggestions, not guaranteed completion times or a learned personal productivity model.
 
-<details>
-<summary>View plan input and editable recognition results</summary>
+**View plan input and editable recognition results**
 
 <img src="docs/screenshots/plan-import.png" alt="Paste a course assignment plan for AI recognition" width="720">
 
 <img src="docs/screenshots/plan-review.png" alt="Review recognized task details, dates, and optional durations" width="640">
 
-</details>
 
 ### 5. Ask the AI Assistant to Help You Get Started
 
 "帮我理一理" helps turn a vague need into concrete next steps. Describe the work, review the proposed breakdown, edit tasks and estimates, and ask for adjustments. Select "按计划开始" to bring the confirmed plan into the study to-do list.
 
-<details>
-<summary>View the assistant conversation and plan review</summary>
+**View the assistant conversation and plan review**
 
 <img src="docs/screenshots/ai-input.png" alt="Describe a vague assignment to the planning assistant" width="720">
 
 <img src="docs/screenshots/ai-plan.png" alt="Review and adjust the assistant's proposed tasks before starting" width="560">
 
-</details>
 
 The confirmed tasks appear in the study scene. Select a task, track its countdown, and work through the list alongside the session timer.
 
@@ -114,8 +104,7 @@ The learning-page reminder is marked as seen as soon as it appears, so refreshin
 
 Earn pet food by reaching daily focused-study milestones. Feed your companion to increase its growth value and eventually advance its growth stage. The pet profile shows days together, growth progress, stored food, and today's study progress. Food does not expire.
 
-<details>
-<summary>View the pet backpack, feeding progress, and adoption options</summary>
+**View the pet backpack, feeding progress, and adoption options**
 
 <img src="docs/screenshots/pet-backpack.png" alt="Pet backpack and current companion" width="640">
 
@@ -123,7 +112,6 @@ Earn pet food by reaching daily focused-study milestones. Feed your companion to
 
 <img src="docs/screenshots/pet-adoption.png" alt="Additional companions and adoption-slot unlock progress" width="640">
 
-</details>
 
 ### 8. Check In Each Day
 
@@ -131,14 +119,12 @@ The focus calendar supports daily check-ins and shows the current streak, total 
 
 The current encouragement is a fixed message, not a personalized daily AI-generated quote or a push notification.
 
-<details>
-<summary>View the focus calendar and check-in encouragement</summary>
+**View the focus calendar and check-in encouragement**
 
 <img src="docs/screenshots/daily-checkin.png" alt="Daily check-in calendar and study statistics" width="640">
 
 <img src="docs/screenshots/checkin-encouragement.png" alt="Encouragement after checking in with options to study or stay in the calendar" width="640">
 
-</details>
 
 ### 9. Write and Revisit a Diary
 
@@ -146,14 +132,12 @@ Open the diary from the study environment, choose a date, and record the day's t
 
 ![Diary entry point in the rainy library](docs/screenshots/diary-scene.png)
 
-<details>
-<summary>View the diary editor and past entries</summary>
+**View the diary editor and past entries**
 
 <img src="docs/screenshots/diary-editor.png" alt="Date-based diary editor with a word count and save action" width="640">
 
 <img src="docs/screenshots/diary-history.png" alt="Calendar of past diary entries and selected-day preview" width="640">
 
-</details>
 
 ### 10. Register, Sign In, and Choose an Avatar
 
@@ -161,8 +145,7 @@ Register with a nickname and an email or phone identifier, then sign in with a p
 
 The demo does not verify email or phone ownership and does not provide password recovery. Use test credentials rather than a password used elsewhere.
 
-<details>
-<summary>View sign-in, registration, and avatar selection</summary>
+**View sign-in, registration, and avatar selection**
 
 <img src="docs/screenshots/account-login.png" alt="Email or phone sign-in form" width="440">
 
@@ -170,7 +153,6 @@ The demo does not verify email or phone ownership and does not provide password 
 
 <img src="docs/screenshots/account-avatar.png" alt="Preset avatar selection and custom image upload" width="440">
 
-</details>
 
 ## AI Workflow
 
